@@ -79,7 +79,8 @@ header {
 nav { display: flex; align-items: center; gap: 1.5rem; }
 .cyber-link { color: var(--text2); text-decoration: none; font-family: var(--font-mono); font-size: 0.9rem; letter-spacing: 0.1em; transition: color 0.2s; }
 .cyber-link:hover { color: var(--cyan); text-shadow: var(--glow); }
-.user-badge { background: var(--glass); border: 1px solid var(--green); color: var(--green); padding: 0.2rem 0.8rem; border-radius: 4px; font-family: var(--font-mono); font-size: 0.75rem; }
+.user-badge { background: var(--glass); border: 1px solid var(--green); color: var(--green); padding: 0.2rem 0.8rem; border-radius: 4px; font-family: var(--font-mono); font-size: 0.75rem; transition: border-color 0.2s, color 0.2s; }
+.user-badge:hover { border-color: var(--cyan); color: var(--cyan); }
 
 /* ── Glass Panel ── */
 .glass-panel {
@@ -267,6 +268,12 @@ nav { display: flex; align-items: center; gap: 1.5rem; }
 .url-indicators { margin-top: 1rem; }
 .url-indicator { display: inline-block; margin: 0.2rem; padding: 0.2rem 0.6rem; background: rgba(255,45,85,0.15); border: 1px solid var(--red); border-radius: 3px; font-family: var(--font-mono); font-size: 0.7rem; color: var(--red); }
 
+/* Detailed threat rows */
+.url-detailed-threats { grid-column: 1 / -1; margin-top: 1rem; }
+.url-threat-row { display: flex; align-items: flex-start; gap: 0.8rem; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,45,85,0.1); font-family: var(--font-mono); font-size: 0.78rem; flex-wrap: wrap; }
+.url-threat-conf { color: var(--orange); min-width: 40px; }
+.url-threat-exp { color: var(--text2); flex: 1; }
+
 /* ── Recommendations ── */
 .recommendations-panel { padding: 1.5rem; margin-bottom: 1.5rem; }
 .recommendations-panel h3 { font-family: var(--font-mono); color: var(--green); margin-bottom: 1rem; font-size: 1rem; letter-spacing: 0.1em; }
@@ -306,6 +313,10 @@ nav { display: flex; align-items: center; gap: 1.5rem; }
 .auth-msg { font-family: var(--font-mono); font-size: 0.8rem; margin-top: 0.8rem; min-height: 1.2em; }
 .auth-msg.error { color: var(--red); }
 .auth-msg.success { color: var(--green); }
+.auth-divider { display: flex; align-items: center; gap: 0.8rem; margin: 1.2rem 0 0.8rem; }
+.auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--glass-border); }
+.auth-divider span { font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted); }
+.auth-guest-note { font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); text-align: center; margin-top: 0.5rem; }
 
 /* ── Chatbot ── */
 .chatbot-container { position: fixed; bottom: 1.5rem; right: 1.5rem; width: 340px; z-index: 200; }

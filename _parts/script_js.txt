@@ -310,8 +310,43 @@ function getMockResult(input) {
   const hasCred = /password|api.?key|token|secret/i.test(input);
   const hasEmail = /[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}/i.test(input);
   const hasPAN = /[A-Z]{5}[0-9]{4}[A-Z]/i.test(input);
-  const score = hasCred ? 0.82 : hasEmail ? 0.45 : hasPAN ? 0.65 : 0.12;
+  const isURL = /^https?:\/\//i.test(input) || /\.[a-z]{2,}(\/|$)/i.test(input);
+  const score = hasCred ? 0.82 : hasEmail ? 0.45 : hasPAN ? 0.65 : isURL ? 0.55 : 0.12;
   const level = score > 0.75 ? 'critical' : score > 0.55 ? 'high' : score > 0.35 ? 'medium' : score > 0.1 ? 'low' : 'safe';
+
+  // Build mock URL analysis if input looks like a URL
+  let urlAnalysis = null;
+  let detailedThreats = [];
+  if (isURL) {
+    const hasIP = /^\d{1,3}(\.\d{1,3}){3}/.test(input.replace(/^https?:\/\//i, ''));
+    const hasSuspiciousTLD = /\.(xyz|top|tk|ml|click|link)($|\/)/.test(input);
+    const hasPhishKw = /(login|verify|secure|account|update|banking)/i.test(input);
+    const domainMatch = input.match(/^https?:\/\/([^/]+)/i);
+    const domain = domainMatch ? domainMatch[1] : input;
+    const dotCount = (domain.match(/\./g) || []).length;
+    urlAnalysis = {
+      domain,
+      is_phishing: hasPhishKw || hasSuspiciousTLD,
+      is_malicious: hasIP,
+      risk_score: score,
+      entropy_score: 3.8 + (hasSuspiciousTLD ? 0.6 : 0),
+      ssl_valid: input.startsWith('https'),
+      is_typosquat: false,
+      ml_score: score * 0.9,
+      heuristic_score: score * 0.7,
+      threat_indicators: [
+        ...(hasIP ? ['ip_address_as_host'] : []),
+        ...(hasSuspiciousTLD ? ['suspicious_tld'] : []),
+        ...(hasPhishKw && dotCount > 2 ? ['suspicious_subdomain_keyword'] : []),
+        ...(!input.startsWith('https') ? ['no_ssl'] : []),
+      ],
+    };
+    if (hasIP) detailedThreats.push({ entity_type: 'IP_BASED_URL', text: domain, confidence: 0.75, explanation: 'URL uses IP address instead of domain' });
+    if (hasSuspiciousTLD) detailedThreats.push({ entity_type: 'SUSPICIOUS_TLD', text: domain, confidence: 0.80, explanation: 'Suspicious TLD detected' });
+    if (hasPhishKw && dotCount > 2) detailedThreats.push({ entity_type: 'SUSPICIOUS_SUBDOMAIN', text: domain, confidence: 0.90, explanation: 'Phishing keyword in deep subdomain' });
+    if (!input.startsWith('https')) detailedThreats.push({ entity_type: 'NO_SSL', text: input, confidence: 0.70, explanation: 'URL does not use HTTPS' });
+  }
+
   return {
     risk: {
       final_score: score, risk_level: level, confidence: 0.87,
@@ -330,7 +365,9 @@ function getMockResult(input) {
       ],
       recommendations: hasCred
         ? ['Block transmission immediately and alert security team.', 'Redact all credential data before sharing externally.', 'Initiate incident response protocol.']
-        : ['Content appears safe. Standard sharing policies apply.'],
+        : isURL && score > 0.4
+          ? ['Do not click or share this URL without verification.', 'Check the domain against known phishing databases.']
+          : ['Content appears safe. Standard sharing policies apply.'],
     },
     pii: {
       total_matches: hasCred ? 2 : hasEmail ? 1 : 0,
@@ -346,6 +383,7 @@ function getMockResult(input) {
       threat_keywords: hasCred ? ['password', 'secret'] : [],
     },
     anomaly: { is_anomaly: hasCred, anomaly_score: hasCred ? 0.78 : 0.12, explanation: hasCred ? 'Anomaly detected: credential patterns detected. Score: 0.78' : 'Content appears within normal parameters.' },
+    ...(urlAnalysis ? { url_analysis: urlAnalysis, detailed_threats: detailedThreats } : {}),
   };
 }
 
@@ -408,6 +446,7 @@ function renderResults(data) {
   // URL panel
   if (urlA.domain) {
     document.getElementById('url-panel').classList.remove('hidden');
+    const detailedThreats = data.detailed_threats || [];
     document.getElementById('url-details').innerHTML = `
       <div class="url-detail-item"><div class="label">DOMAIN</div><div class="value">${urlA.domain}</div></div>
       <div class="url-detail-item"><div class="label">SSL</div><div class="value ${urlA.ssl_valid?'good':'bad'}">${urlA.ssl_valid?'VALID':'INVALID'}</div></div>
@@ -416,6 +455,16 @@ function renderResults(data) {
       <div class="url-detail-item"><div class="label">ML SCORE</div><div class="value">${Math.round((urlA.ml_score||0)*100)}%</div></div>
       <div class="url-detail-item"><div class="label">TYPOSQUAT</div><div class="value ${urlA.is_typosquat?'bad':'good'}">${urlA.is_typosquat?'YES':'NO'}</div></div>
       ${urlA.threat_indicators?.length ? `<div class="url-indicators">${urlA.threat_indicators.map(i=>`<span class="url-indicator">${i}</span>`).join('')}</div>` : ''}
+      ${detailedThreats.length ? `
+        <div class="url-detailed-threats">
+          <div class="label" style="margin-bottom:0.5rem">DETAILED THREAT ANALYSIS</div>
+          ${detailedThreats.map(t => `
+            <div class="url-threat-row">
+              <span class="url-indicator">${t.entity_type}</span>
+              <span class="url-threat-conf">${Math.round(t.confidence*100)}%</span>
+              <span class="url-threat-exp">${t.explanation}</span>
+            </div>`).join('')}
+        </div>` : ''}
     `;
   }
 
@@ -634,6 +683,12 @@ const AURA_RESPONSES = {
   'ocr': 'Upload a screenshot in the IMAGE tab. Our EasyOCR + Tesseract pipeline extracts text and runs the full AI scan on it.',
   'risk': 'Risk scores are computed by our ensemble engine combining PII detection (30%), NLP analysis (20%), anomaly detection (20%), and URL analysis (20%).',
   'login': 'Click LOGIN in the top navigation to authenticate. Logged-in users get scan history, image scanning, and URL analysis.',
+  'entropy': 'High domain entropy (>4.0) suggests randomly generated or obfuscated domains — a common phishing indicator. Scores above 4.2 are flagged.',
+  'typosquat': 'Typosquatting detection uses Levenshtein distance to find domains that closely resemble known brands like google, paypal, or microsoft.',
+  'ip': 'URLs using raw IP addresses instead of domain names are flagged as IP_BASED_URL — a strong phishing signal.',
+  'subdomain': 'Deep subdomains containing phishing keywords (e.g. paypal.verify.account.security-update.com) are flagged as SUSPICIOUS_SUBDOMAIN.',
+  'ssl': 'URLs without HTTPS are flagged as NO_SSL. Always verify SSL certificates before entering credentials on any site.',
+  'url': 'Switch to the URL tab and paste any link. The analyzer checks entropy, typosquatting, suspicious TLDs, phishing keywords, IP usage, and SSL validity.',
   'default': 'I can help with: scanning text/images/URLs, understanding risk scores, API key detection, phishing analysis, and PII redaction. What do you need?',
 };
 

@@ -1,4 +1,4 @@
-"""Authentication routes — login, register, refresh."""
+"""Authentication routes — login, register, refresh, guest."""
 
 import uuid
 from datetime import datetime, timezone
@@ -35,6 +35,21 @@ class TokenResponse(BaseModel):
     refresh_token: str
     token_type: str = "bearer"
     user: dict
+
+
+# ── Guest login — no DB, no credentials needed ────────────────────────────────
+@router.post("/guest")
+async def guest_login():
+    """Issue an 8-hour guest JWT. No registration required."""
+    from datetime import timedelta
+    guest_id = str(uuid.uuid4())
+    token_data = {"sub": guest_id, "role": "guest", "org_id": None}
+    return {
+        "access_token": create_access_token(token_data, expires_delta=timedelta(hours=8)),
+        "refresh_token": create_refresh_token(token_data),
+        "token_type": "bearer",
+        "user": {"id": guest_id, "email": "guest@safeshare.ai", "role": "guest", "full_name": "Guest"},
+    }
 
 
 @router.post("/register", response_model=TokenResponse, status_code=201)

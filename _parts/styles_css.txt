@@ -267,6 +267,12 @@ nav { display: flex; align-items: center; gap: 1.5rem; }
 .url-indicators { margin-top: 1rem; }
 .url-indicator { display: inline-block; margin: 0.2rem; padding: 0.2rem 0.6rem; background: rgba(255,45,85,0.15); border: 1px solid var(--red); border-radius: 3px; font-family: var(--font-mono); font-size: 0.7rem; color: var(--red); }
 
+/* Detailed threat rows */
+.url-detailed-threats { grid-column: 1 / -1; margin-top: 1rem; }
+.url-threat-row { display: flex; align-items: flex-start; gap: 0.8rem; padding: 0.5rem 0; border-bottom: 1px solid rgba(255,45,85,0.1); font-family: var(--font-mono); font-size: 0.78rem; flex-wrap: wrap; }
+.url-threat-conf { color: var(--orange); min-width: 40px; }
+.url-threat-exp { color: var(--text2); flex: 1; }
+
 /* ── Recommendations ── */
 .recommendations-panel { padding: 1.5rem; margin-bottom: 1.5rem; }
 .recommendations-panel h3 { font-family: var(--font-mono); color: var(--green); margin-bottom: 1rem; font-size: 1rem; letter-spacing: 0.1em; }

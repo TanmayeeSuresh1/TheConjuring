@@ -154,6 +154,13 @@ class URLAnalyzer:
         if len(kw_hits) >= 2:
             indicators.append(f"phishing_keywords:{','.join(kw_hits[:3])}")
 
+        # 4b. Suspicious keyword in subdomain (keyword present AND deep subdomain)
+        domain_lower = result.domain.lower()
+        subdomain_kw_hits = [kw for kw in PHISHING_KEYWORDS if kw in domain_lower]
+        if subdomain_kw_hits and domain_lower.count(".") > 2:
+            for kw in subdomain_kw_hits[:3]:
+                indicators.append(f"suspicious_subdomain_keyword:{kw}")
+
         # 5. IP address as host
         if re.match(r"^\d{1,3}(\.\d{1,3}){3}$", result.domain):
             indicators.append("ip_address_as_host")
@@ -263,3 +270,93 @@ class URLAnalyzer:
             f"{', '.join(r.threat_indicators[:4])}. "
             f"ML score: {r.ml_score:.2f}, Heuristic: {r.heuristic_score:.2f}."
         )
+
+    def get_detailed_threats(self, url: str, result: "URLAnalysisResult | None" = None) -> list[dict]:
+        """
+        Returns a structured threat list:
+        [{"entity_type": ..., "text": ..., "confidence": ..., "explanation": ...}]
+
+        Pass a pre-computed URLAnalysisResult to avoid running the pipeline twice.
+        If omitted, analyze() is called internally.
+        """
+        if result is None:
+            result = self.analyze(url)
+
+        threats = []
+
+        if result.entropy_score > 4.0:
+            threats.append({
+                "entity_type": "HIGH_ENTROPY_DOMAIN",
+                "text": result.domain,
+                "confidence": 0.85,
+                "explanation": f"High entropy detected ({result.entropy_score:.2f})",
+            })
+
+        domain_lower = result.domain.lower()
+        if domain_lower.count(".") > 2:
+            for kw in PHISHING_KEYWORDS:
+                if kw in domain_lower:
+                    threats.append({
+                        "entity_type": "SUSPICIOUS_SUBDOMAIN",
+                        "text": result.domain,
+                        "confidence": 0.90,
+                        "explanation": f"Suspicious keyword detected: {kw}",
+                    })
+                    break  # one entry per domain is enough
+
+        if re.match(r"^\d{1,3}(\.\d{1,3}){3}$", result.domain):
+            threats.append({
+                "entity_type": "IP_BASED_URL",
+                "text": result.domain,
+                "confidence": 0.75,
+                "explanation": "URL uses IP address instead of domain",
+            })
+
+        if result.is_typosquat:
+            threats.append({
+                "entity_type": "TYPOSQUATTING",
+                "text": result.domain,
+                "confidence": 0.88,
+                "explanation": "Domain resembles a known brand (Levenshtein ≤ 2)",
+            })
+
+        for tld in SUSPICIOUS_TLDS:
+            if result.domain.endswith(tld):
+                threats.append({
+                    "entity_type": "SUSPICIOUS_TLD",
+                    "text": result.domain,
+                    "confidence": 0.80,
+                    "explanation": f"Suspicious TLD: {tld}",
+                })
+                break
+
+        if not result.ssl_valid:
+            threats.append({
+                "entity_type": "NO_SSL",
+                "text": url,
+                "confidence": 0.70,
+                "explanation": "URL does not use HTTPS",
+            })
+
+        return threats
+
+    def debug_analyze(self, urls: list[str]) -> None:
+        """
+        Verbose console output for a list of URLs — mirrors the snippet's test harness.
+        Prints domain, entropy, ML/heuristic scores, and all detected threats.
+        """
+        for url in urls:
+            result = self.analyze(url)
+            print(f"\nAnalyzing URL: {url}")
+            print(f"Domain       : {result.domain}")
+            print(f"Entropy      : {result.entropy_score:.2f}")
+            print(f"ML Score     : {result.ml_score:.2f}  |  Heuristic: {result.heuristic_score:.2f}")
+            print(f"Risk Level   : {result.risk_level.upper()}  ({result.risk_score:.2f})")
+            threats = self.get_detailed_threats(url, result=result)  # reuse result, no double-run
+            print("Threats Detected:")
+            if threats:
+                for t in threats:
+                    print(f"  {t}")
+            else:
+                print("  No threats detected.")
+

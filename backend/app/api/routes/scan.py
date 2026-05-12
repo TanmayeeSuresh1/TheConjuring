@@ -1,14 +1,10 @@
-"""Scan API routes - text, image, URL, and live WebSocket scanning."""
+"""Scan API routes - text, image, URL, and live WebSocket scanning. Auth removed."""
 import hashlib, json, time, uuid
 from datetime import datetime, timezone
 from typing import Optional
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, File, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.database import get_db
-from app.core.security import get_current_user
 from app.core.config import settings
-from app.models.models import ThreatScan, ThreatReport
 from app.ai_engine.pii_detector import PIIDetector
 from app.nlp_services.nlp_pipeline import NLPPipeline
 from app.anomaly_detection.isolation_forest import AnomalyDetector
@@ -40,11 +36,7 @@ def _resp(scan_id, scan_type, result):
 
 
 @router.post("/text")
-async def scan_text(
-    body: TextScanRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
-):
+async def scan_text(body: TextScanRequest):
     if len(body.text) > 50000:
         raise HTTPException(status_code=413, detail="Text exceeds 50,000 character limit")
     scan_id = str(uuid.uuid4())
@@ -58,26 +50,6 @@ async def scan_text(
     )
     risk_result = _risk.aggregate(pii_result=pii_result, nlp_result=nlp_result, anomaly_result=anomaly_result)
     duration_ms = int((time.perf_counter() - start) * 1000)
-    scan = ThreatScan(
-        id=uuid.UUID(scan_id), user_id=uuid.UUID(current_user["user_id"]),
-        scan_type="text", status="completed", risk_score=risk_result.final_score,
-        risk_level=risk_result.risk_level,
-        input_hash=hashlib.sha256(body.text.encode()).hexdigest(),
-        input_preview=body.text[:200], scan_duration_ms=duration_ms,
-        completed_at=datetime.now(timezone.utc),
-    )
-    db.add(scan)
-    report = ThreatReport(
-        scan_id=uuid.UUID(scan_id),
-        pii_detections=[d.to_dict() for d in pii_result.detections],
-        nlp_entities=[e.to_dict() for e in nlp_result.entities],
-        anomaly_scores=anomaly_result.to_dict(),
-        risk_breakdown=risk_result.to_dict(),
-        ai_explanation="\n".join(risk_result.reasoning_chain),
-        model_confidence=risk_result.confidence,
-        detection_pipeline=risk_result.pipeline_stages,
-    )
-    db.add(report)
     return _resp(scan_id, "text", {
         "pii": pii_result.to_dict(), "nlp": nlp_result.to_dict(),
         "anomaly": anomaly_result.to_dict(), "risk": risk_result.to_dict(),
@@ -86,11 +58,7 @@ async def scan_text(
 
 
 @router.post("/image")
-async def scan_image(
-    file: UploadFile = File(...),
-    db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
-):
+async def scan_image(file: UploadFile = File(...)):
     if file.content_type not in settings.ALLOWED_IMAGE_TYPES:
         raise HTTPException(status_code=415, detail=f"Unsupported file type: {file.content_type}")
     image_bytes = await file.read()
@@ -112,15 +80,6 @@ async def scan_image(
         anomaly_result=anomaly_result, ocr_result=ocr_result,
     )
     duration_ms = int((time.perf_counter() - start) * 1000)
-    scan = ThreatScan(
-        id=uuid.UUID(scan_id), user_id=uuid.UUID(current_user["user_id"]),
-        scan_type="image", status="completed", risk_score=risk_result.final_score,
-        risk_level=risk_result.risk_level,
-        input_hash=hashlib.sha256(image_bytes).hexdigest(),
-        input_preview=f"[IMAGE: {file.filename}]",
-        scan_duration_ms=duration_ms, completed_at=datetime.now(timezone.utc),
-    )
-    db.add(scan)
     return _resp(scan_id, "image", {
         "ocr": ocr_result.to_dict(),
         "pii": pii_result.to_dict() if pii_result else {},
@@ -131,27 +90,16 @@ async def scan_image(
 
 
 @router.post("/url")
-async def scan_url(
-    body: URLScanRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
-):
+async def scan_url(body: URLScanRequest):
     scan_id = str(uuid.uuid4())
     start = time.perf_counter()
     url_result = _url.analyze(body.url)
+    detailed_threats = _url.get_detailed_threats(body.url, result=url_result)
     risk_result = _risk.aggregate(url_result=url_result)
     duration_ms = int((time.perf_counter() - start) * 1000)
-    scan = ThreatScan(
-        id=uuid.UUID(scan_id), user_id=uuid.UUID(current_user["user_id"]),
-        scan_type="url", status="completed", risk_score=risk_result.final_score,
-        risk_level=risk_result.risk_level,
-        input_hash=hashlib.sha256(body.url.encode()).hexdigest(),
-        input_preview=body.url[:200], scan_duration_ms=duration_ms,
-        completed_at=datetime.now(timezone.utc),
-    )
-    db.add(scan)
     return _resp(scan_id, "url", {
         "url_analysis": url_result.to_dict(),
+        "detailed_threats": detailed_threats,
         "risk": risk_result.to_dict(), "duration_ms": duration_ms,
     })
 
