@@ -1,375 +1,4 @@
-import os
 
-def w(p, c):
-    os.makedirs(os.path.dirname(p) if os.path.dirname(p) else '.', exist_ok=True)
-    with open(p, 'w', encoding='utf-8') as f:
-        f.write(c)
-    print("OK:", p)
-
-CSS = ""
-
-CSS += """
-/* ── SafeShare AI - Cyberpunk Dark Theme ── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-:root {
-  --bg: #050a0e;
-  --bg2: #0a1628;
-  --bg3: #0d1f3c;
-  --cyan: #00f5ff;
-  --cyan2: #00bcd4;
-  --green: #00ff88;
-  --red: #ff2d55;
-  --orange: #ff9500;
-  --yellow: #ffd60a;
-  --purple: #bf5af2;
-  --text: #e0f7fa;
-  --text2: #80cbc4;
-  --muted: #37474f;
-  --glass: rgba(0,245,255,0.04);
-  --glass-border: rgba(0,245,255,0.15);
-  --glow: 0 0 20px rgba(0,245,255,0.3);
-  --glow-strong: 0 0 40px rgba(0,245,255,0.6);
-  --font-mono: 'Share Tech Mono', monospace;
-  --font-main: 'Rajdhani', sans-serif;
-}
-
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-main);
-  font-size: 16px;
-  overflow-x: hidden;
-  min-height: 100vh;
-}
-
-/* ── Scrollbar ── */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--bg2); }
-::-webkit-scrollbar-thumb { background: var(--cyan2); border-radius: 3px; }
-
-/* ── Loader ── */
-#loader {
-  position: fixed; inset: 0; background: var(--bg);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 9999; transition: opacity 0.6s;
-}
-#loader.fade-out { opacity: 0; pointer-events: none; }
-.loader-content { text-align: center; font-family: var(--font-mono); color: var(--cyan); }
-.loader-content p { margin-top: 1.5rem; letter-spacing: 0.2em; animation: blink 1s infinite; }
-"""
-
-CSS += """
-/* ── Cyber Spinner ── */
-.cyber-spinner {
-  width: 80px; height: 80px; margin: 0 auto;
-  border: 3px solid transparent;
-  border-top-color: var(--cyan);
-  border-right-color: var(--green);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  box-shadow: var(--glow);
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-@keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
-
-/* ── Particle Canvas ── */
-#particleCanvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
-
-/* ── App Wrapper ── */
-.app-wrapper { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 0 1.5rem 4rem; }
-
-/* ── Header ── */
-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 1.2rem 0; border-bottom: 1px solid var(--glass-border);
-  position: sticky; top: 0; z-index: 100;
-  background: rgba(5,10,14,0.85); backdrop-filter: blur(12px);
-}
-.logo { display: flex; align-items: center; gap: 0.7rem; font-family: var(--font-mono); font-size: 1.3rem; color: var(--cyan); text-shadow: var(--glow); }
-.logo i { font-size: 1.6rem; }
-nav { display: flex; align-items: center; gap: 1.5rem; }
-.cyber-link { color: var(--text2); text-decoration: none; font-family: var(--font-mono); font-size: 0.9rem; letter-spacing: 0.1em; transition: color 0.2s; }
-.cyber-link:hover { color: var(--cyan); text-shadow: var(--glow); }
-.user-badge { background: var(--glass); border: 1px solid var(--green); color: var(--green); padding: 0.2rem 0.8rem; border-radius: 4px; font-family: var(--font-mono); font-size: 0.75rem; }
-
-/* ── Glass Panel ── */
-.glass-panel {
-  background: var(--glass); border: 1px solid var(--glass-border);
-  border-radius: 12px; backdrop-filter: blur(16px);
-  box-shadow: 0 4px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(0,245,255,0.08);
-}
-"""
-
-CSS += """
-/* ── Hero ── */
-.hero { padding: 6rem 0 4rem; text-align: center; }
-.glitch-text {
-  font-family: var(--font-mono); font-size: clamp(2.5rem, 6vw, 5rem);
-  color: var(--cyan); text-shadow: var(--glow-strong);
-  position: relative; display: inline-block;
-}
-.glitch-text::before, .glitch-text::after {
-  content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%;
-}
-.glitch-text::before { color: var(--red); animation: glitch1 3s infinite; clip-path: polygon(0 0,100% 0,100% 35%,0 35%); }
-.glitch-text::after  { color: var(--green); animation: glitch2 3s infinite; clip-path: polygon(0 65%,100% 65%,100% 100%,0 100%); }
-@keyframes glitch1 { 0%,90%,100%{transform:translate(0)} 92%{transform:translate(-3px,1px)} 94%{transform:translate(3px,-1px)} 96%{transform:translate(-2px,2px)} }
-@keyframes glitch2 { 0%,90%,100%{transform:translate(0)} 92%{transform:translate(3px,-1px)} 94%{transform:translate(-3px,1px)} 96%{transform:translate(2px,-2px)} }
-#typing-text { font-family: var(--font-mono); color: var(--text2); font-size: 1.1rem; margin: 1.5rem 0 2.5rem; min-height: 1.5em; }
-
-/* ── Cyber Button ── */
-.cyber-btn {
-  display: inline-flex; align-items: center; gap: 0.6rem;
-  padding: 0.75rem 2rem; background: transparent;
-  border: 1px solid var(--cyan); color: var(--cyan);
-  font-family: var(--font-mono); font-size: 0.9rem; letter-spacing: 0.15em;
-  cursor: pointer; text-decoration: none; border-radius: 4px;
-  transition: all 0.2s; position: relative; overflow: hidden;
-}
-.cyber-btn::before {
-  content: ''; position: absolute; inset: 0;
-  background: var(--cyan); transform: scaleX(0); transform-origin: left;
-  transition: transform 0.2s; z-index: -1;
-}
-.cyber-btn:hover { color: var(--bg); text-shadow: none; box-shadow: var(--glow-strong); }
-.cyber-btn:hover::before { transform: scaleX(1); }
-.cyber-btn.secondary-btn { border-color: var(--cyan2); color: var(--cyan2); }
-.cyber-btn.secondary-btn::before { background: var(--cyan2); }
-.cyber-btn.full-width { width: 100%; justify-content: center; margin-top: 1.2rem; }
-.cyber-btn.sm-btn { padding: 0.4rem 1rem; font-size: 0.75rem; }
-"""
-
-CSS += """
-/* ── Upload Section ── */
-.upload-section { padding: 2rem; margin-bottom: 2rem; }
-.upload-section h2 { font-family: var(--font-mono); color: var(--cyan); margin-bottom: 1.5rem; font-size: 1.2rem; letter-spacing: 0.1em; }
-.scan-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-.tab-btn {
-  padding: 0.5rem 1.2rem; background: transparent; border: 1px solid var(--muted);
-  color: var(--text2); font-family: var(--font-mono); font-size: 0.8rem;
-  cursor: pointer; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.1em;
-}
-.tab-btn.active, .tab-btn:hover { border-color: var(--cyan); color: var(--cyan); box-shadow: var(--glow); }
-.tab-content { display: block; }
-.tab-content.hidden { display: none; }
-.upload-container {
-  border: 1px dashed var(--glass-border); border-radius: 8px;
-  padding: 2rem; text-align: center; transition: border-color 0.2s;
-}
-.upload-container:hover, .upload-container.drag-over { border-color: var(--cyan); box-shadow: var(--glow); }
-.upload-icon { font-size: 3rem; color: var(--cyan2); margin-bottom: 1rem; display: block; }
-.upload-container > p { color: var(--text2); font-family: var(--font-mono); font-size: 0.85rem; margin-bottom: 1rem; letter-spacing: 0.1em; }
-#text-input {
-  width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border);
-  color: var(--text); font-family: var(--font-mono); font-size: 0.9rem;
-  padding: 1rem; border-radius: 6px; resize: vertical; outline: none; transition: border-color 0.2s;
-}
-#text-input:focus { border-color: var(--cyan); box-shadow: var(--glow); }
-.url-field {
-  width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border);
-  color: var(--text); font-family: var(--font-mono); font-size: 0.95rem;
-  padding: 0.9rem 1rem; border-radius: 6px; outline: none; transition: border-color 0.2s; margin-top: 1rem;
-}
-.url-field:focus { border-color: var(--cyan); box-shadow: var(--glow); }
-.file-preview img { max-width: 100%; max-height: 200px; margin-top: 1rem; border-radius: 6px; border: 1px solid var(--glass-border); }
-"""
-
-CSS += """
-/* ── Scanning Section ── */
-.scanning-section { padding: 2rem; margin-bottom: 2rem; }
-.scanning-section h2 { font-family: var(--font-mono); color: var(--cyan); margin-bottom: 1.5rem; font-size: 1.2rem; letter-spacing: 0.1em; animation: blink 1.5s infinite; }
-.scan-visualizer { position: relative; margin-bottom: 1.5rem; }
-.radar-sweep {
-  width: 120px; height: 120px; border-radius: 50%; margin: 0 auto 1.5rem;
-  border: 2px solid var(--cyan2); position: relative; overflow: hidden;
-  box-shadow: 0 0 30px rgba(0,245,255,0.2);
-}
-.radar-sweep::after {
-  content: ''; position: absolute; top: 50%; left: 50%;
-  width: 50%; height: 2px; background: linear-gradient(90deg, transparent, var(--cyan));
-  transform-origin: left center; animation: radar 2s linear infinite;
-}
-@keyframes radar { to { transform: rotate(360deg); } }
-.scan-bar { height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
-.scan-progress { height: 100%; width: 0%; background: linear-gradient(90deg, var(--cyan), var(--green)); border-radius: 3px; transition: width 0.3s; box-shadow: 0 0 10px var(--cyan); }
-.pipeline-stages { display: flex; gap: 1rem; flex-wrap: wrap; margin: 1.2rem 0; }
-.stage { display: flex; align-items: center; gap: 0.5rem; font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); padding: 0.4rem 0.8rem; border: 1px solid var(--muted); border-radius: 4px; transition: all 0.3s; }
-.stage.active { color: var(--cyan); border-color: var(--cyan); box-shadow: var(--glow); }
-.stage.done { color: var(--green); border-color: var(--green); }
-.stage-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
-.stage.active .stage-dot { animation: blink 0.8s infinite; }
-.scan-logs { list-style: none; font-family: var(--font-mono); font-size: 0.8rem; color: var(--text2); max-height: 180px; overflow-y: auto; background: rgba(0,0,0,0.3); border-radius: 6px; padding: 1rem; }
-.scan-logs li { padding: 0.2rem 0; border-bottom: 1px solid rgba(0,245,255,0.05); }
-.scan-logs li:last-child { color: var(--cyan); }
-"""
-
-CSS += """
-/* ── Dashboard ── */
-.dashboard-section { margin-bottom: 2rem; }
-.dashboard-header { padding: 2rem; margin-bottom: 1.5rem; }
-.dashboard-header h2 { font-family: var(--font-mono); color: var(--cyan); margin-bottom: 1.2rem; font-size: 1.2rem; letter-spacing: 0.1em; }
-.risk-meter-container { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
-.risk-meter { flex: 1; height: 12px; background: var(--bg3); border-radius: 6px; overflow: hidden; border: 1px solid var(--glass-border); }
-.risk-level { height: 100%; border-radius: 6px; transition: width 1s ease, background 0.5s; background: var(--green); }
-.risk-level.low { background: var(--yellow); }
-.risk-level.medium { background: var(--orange); }
-.risk-level.high { background: var(--red); box-shadow: 0 0 12px var(--red); }
-.risk-level.critical { background: var(--red); box-shadow: 0 0 20px var(--red); animation: pulse-red 1s infinite; }
-@keyframes pulse-red { 0%,100%{box-shadow:0 0 20px var(--red)} 50%{box-shadow:0 0 40px var(--red)} }
-#risk-score { font-family: var(--font-mono); font-size: 1.8rem; color: var(--cyan); min-width: 70px; text-align: right; }
-.risk-badge { display: inline-block; padding: 0.3rem 1.2rem; border-radius: 4px; font-family: var(--font-mono); font-size: 0.85rem; letter-spacing: 0.15em; border: 1px solid var(--green); color: var(--green); }
-.risk-badge.low { border-color: var(--yellow); color: var(--yellow); }
-.risk-badge.medium { border-color: var(--orange); color: var(--orange); }
-.risk-badge.high, .risk-badge.critical { border-color: var(--red); color: var(--red); }
-
-/* ── Reasoning Panel ── */
-.reasoning-panel { padding: 1.5rem; margin-bottom: 1.5rem; }
-.reasoning-panel h3 { font-family: var(--font-mono); color: var(--purple); margin-bottom: 1rem; font-size: 1rem; letter-spacing: 0.1em; }
-.reasoning-list { padding-left: 1.2rem; }
-.reasoning-list li { font-family: var(--font-mono); font-size: 0.8rem; color: var(--text2); padding: 0.3rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); line-height: 1.5; }
-.reasoning-list li:last-child { color: var(--cyan); font-weight: bold; }
-
-/* ── Pipeline Panel ── */
-.pipeline-panel { padding: 1.5rem; margin-bottom: 1.5rem; }
-.pipeline-panel h3 { font-family: var(--font-mono); color: var(--cyan2); margin-bottom: 1rem; font-size: 1rem; letter-spacing: 0.1em; }
-.pipeline-viz { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
-.pipe-stage { background: var(--bg3); border: 1px solid var(--glass-border); border-radius: 6px; padding: 0.6rem 1rem; font-family: var(--font-mono); font-size: 0.75rem; text-align: center; min-width: 120px; }
-.pipe-stage .pipe-name { color: var(--text2); margin-bottom: 0.3rem; }
-.pipe-stage .pipe-score { font-size: 1.1rem; font-weight: bold; }
-.pipe-stage.safe .pipe-score { color: var(--green); }
-.pipe-stage.low .pipe-score { color: var(--yellow); }
-.pipe-stage.medium .pipe-score { color: var(--orange); }
-.pipe-stage.high .pipe-score, .pipe-stage.critical .pipe-score { color: var(--red); }
-.pipe-arrow { color: var(--cyan2); font-size: 1.2rem; }
-"""
-
-CSS += """
-/* ── Threat Cards ── */
-.threat-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
-.threat-card { padding: 1.5rem; animation: slideIn 0.4s ease forwards; animation-delay: var(--delay, 0s); opacity: 0; }
-@keyframes slideIn { to { opacity: 1; transform: translateY(0); } from { opacity: 0; transform: translateY(20px); } }
-.card-header { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.8rem; }
-.card-header h3 { font-family: var(--font-mono); font-size: 0.85rem; letter-spacing: 0.1em; }
-.card-header i { font-size: 1.2rem; }
-.card-header.warning { color: var(--orange); }
-.card-header.danger  { color: var(--red); }
-.card-header.safe    { color: var(--green); }
-.card-header.info    { color: var(--cyan); }
-.threat-card p { font-size: 0.85rem; color: var(--text2); margin-bottom: 1rem; line-height: 1.5; }
-.threat-card.safe-card { border-color: rgba(0,255,136,0.2); }
-
-/* ── Entities Panel ── */
-.entities-panel { padding: 1.5rem; margin-bottom: 1.5rem; }
-.entities-panel h3 { font-family: var(--font-mono); color: var(--yellow); margin-bottom: 1rem; font-size: 1rem; letter-spacing: 0.1em; }
-.entity-tokens { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.entity-token { padding: 0.3rem 0.8rem; border-radius: 4px; font-family: var(--font-mono); font-size: 0.75rem; border: 1px solid; }
-.entity-token.PERSON { border-color: var(--purple); color: var(--purple); background: rgba(191,90,242,0.1); }
-.entity-token.ORG    { border-color: var(--cyan); color: var(--cyan); background: rgba(0,245,255,0.08); }
-.entity-token.MONEY  { border-color: var(--green); color: var(--green); background: rgba(0,255,136,0.08); }
-.entity-token.DATE   { border-color: var(--yellow); color: var(--yellow); background: rgba(255,214,10,0.08); }
-.entity-token.default { border-color: var(--text2); color: var(--text2); background: rgba(128,203,196,0.08); }
-
-/* ── OCR Panel ── */
-.ocr-panel { padding: 1.5rem; margin-bottom: 1.5rem; }
-.ocr-panel h3 { font-family: var(--font-mono); color: var(--cyan2); margin-bottom: 1rem; font-size: 1rem; letter-spacing: 0.1em; }
-.ocr-text { font-family: var(--font-mono); font-size: 0.8rem; color: var(--text2); background: rgba(0,0,0,0.4); padding: 1rem; border-radius: 6px; white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow-y: auto; }
-.ocr-meta { margin-top: 0.8rem; font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted); display: flex; gap: 1.5rem; flex-wrap: wrap; }
-.ocr-meta span { color: var(--cyan2); }
-
-/* ── URL Panel ── */
-.url-panel { padding: 1.5rem; margin-bottom: 1.5rem; }
-.url-panel h3 { font-family: var(--font-mono); color: var(--orange); margin-bottom: 1rem; font-size: 1rem; letter-spacing: 0.1em; }
-.url-details { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.8rem; }
-.url-detail-item { background: var(--bg3); border-radius: 6px; padding: 0.8rem; font-family: var(--font-mono); font-size: 0.8rem; }
-.url-detail-item .label { color: var(--muted); font-size: 0.7rem; margin-bottom: 0.3rem; }
-.url-detail-item .value { color: var(--text); }
-.url-detail-item .value.bad { color: var(--red); }
-.url-detail-item .value.good { color: var(--green); }
-.url-indicators { margin-top: 1rem; }
-.url-indicator { display: inline-block; margin: 0.2rem; padding: 0.2rem 0.6rem; background: rgba(255,45,85,0.15); border: 1px solid var(--red); border-radius: 3px; font-family: var(--font-mono); font-size: 0.7rem; color: var(--red); }
-"""
-
-CSS += """
-/* ── Recommendations ── */
-.recommendations-panel { padding: 1.5rem; margin-bottom: 1.5rem; }
-.recommendations-panel h3 { font-family: var(--font-mono); color: var(--green); margin-bottom: 1rem; font-size: 1rem; letter-spacing: 0.1em; }
-.rec-list { list-style: none; }
-.rec-list li { font-family: var(--font-mono); font-size: 0.85rem; color: var(--text2); padding: 0.5rem 0; border-bottom: 1px solid rgba(0,255,136,0.08); display: flex; align-items: flex-start; gap: 0.6rem; }
-.rec-list li::before { content: '>'; color: var(--green); flex-shrink: 0; }
-
-/* ── Action Bar ── */
-.action-bar { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; }
-
-/* ── History Section ── */
-.history-section { padding: 2rem; margin-bottom: 2rem; }
-.history-section h2 { font-family: var(--font-mono); color: var(--cyan); margin-bottom: 1.5rem; font-size: 1.2rem; letter-spacing: 0.1em; }
-.history-list { display: flex; flex-direction: column; gap: 0.8rem; }
-.history-item { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.2rem; background: var(--bg3); border: 1px solid var(--glass-border); border-radius: 8px; font-family: var(--font-mono); font-size: 0.8rem; cursor: pointer; transition: border-color 0.2s; }
-.history-item:hover { border-color: var(--cyan); }
-.history-item .h-type { color: var(--cyan2); min-width: 60px; }
-.history-item .h-preview { color: var(--text2); flex: 1; margin: 0 1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.history-item .h-badge { padding: 0.2rem 0.6rem; border-radius: 3px; font-size: 0.7rem; border: 1px solid; }
-.history-item .h-badge.safe { border-color: var(--green); color: var(--green); }
-.history-item .h-badge.low { border-color: var(--yellow); color: var(--yellow); }
-.history-item .h-badge.medium { border-color: var(--orange); color: var(--orange); }
-.history-item .h-badge.high, .history-item .h-badge.critical { border-color: var(--red); color: var(--red); }
-.history-item .h-time { color: var(--muted); min-width: 100px; text-align: right; }
-
-/* ── Auth Modal ── */
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 500; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
-.modal-overlay.hidden { display: none; }
-.modal { padding: 2rem; width: 100%; max-width: 420px; position: relative; }
-.modal-close { position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--text2); font-size: 1.2rem; cursor: pointer; }
-.modal-close:hover { color: var(--red); }
-.auth-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
-.auth-tab { flex: 1; padding: 0.6rem; background: transparent; border: 1px solid var(--muted); color: var(--text2); font-family: var(--font-mono); font-size: 0.85rem; cursor: pointer; border-radius: 4px; transition: all 0.2s; letter-spacing: 0.1em; }
-.auth-tab.active { border-color: var(--cyan); color: var(--cyan); }
-.auth-input { width: 100%; background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); color: var(--text); font-family: var(--font-mono); font-size: 0.9rem; padding: 0.8rem 1rem; border-radius: 6px; outline: none; margin-bottom: 0.8rem; transition: border-color 0.2s; }
-.auth-input:focus { border-color: var(--cyan); }
-.auth-msg { font-family: var(--font-mono); font-size: 0.8rem; margin-top: 0.8rem; min-height: 1.2em; }
-.auth-msg.error { color: var(--red); }
-.auth-msg.success { color: var(--green); }
-"""
-
-CSS += """
-/* ── Chatbot ── */
-.chatbot-container { position: fixed; bottom: 1.5rem; right: 1.5rem; width: 340px; z-index: 200; }
-.chatbot-header { display: flex; align-items: center; justify-content: space-between; padding: 0.9rem 1.2rem; cursor: pointer; border-bottom: 1px solid var(--glass-border); }
-.chatbot-title { display: flex; align-items: center; gap: 0.6rem; font-family: var(--font-mono); color: var(--cyan); font-size: 0.9rem; }
-.chatbot-title i { color: var(--green); }
-#chatbot-icon { color: var(--text2); transition: transform 0.3s; }
-.chatbot-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
-.chatbot-body.open { max-height: 400px; }
-.chat-messages { padding: 1rem; max-height: 260px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.8rem; }
-.message { padding: 0.7rem 1rem; border-radius: 8px; font-family: var(--font-mono); font-size: 0.8rem; line-height: 1.5; max-width: 90%; }
-.message.bot { background: rgba(0,245,255,0.08); border: 1px solid rgba(0,245,255,0.15); color: var(--text2); align-self: flex-start; }
-.message.user { background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.15); color: var(--green); align-self: flex-end; }
-.chat-input-area { display: flex; gap: 0.5rem; padding: 0.8rem; border-top: 1px solid var(--glass-border); }
-#chat-input { flex: 1; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); color: var(--text); font-family: var(--font-mono); font-size: 0.8rem; padding: 0.5rem 0.8rem; border-radius: 4px; outline: none; }
-#chat-input:focus { border-color: var(--cyan); }
-#send-msg-btn { background: var(--cyan); border: none; color: var(--bg); padding: 0.5rem 0.8rem; border-radius: 4px; cursor: pointer; transition: background 0.2s; }
-#send-msg-btn:hover { background: var(--green); }
-
-/* ── Footer ── */
-footer { text-align: center; padding: 2rem 0; font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted); border-top: 1px solid var(--glass-border); margin-top: 3rem; }
-
-/* ── Utility ── */
-.hidden { display: none !important; }
-@media (max-width: 768px) {
-  .threat-cards { grid-template-columns: 1fr; }
-  .pipeline-viz { flex-direction: column; }
-  .chatbot-container { width: calc(100vw - 2rem); right: 1rem; }
-  .action-bar { flex-direction: column; }
-  .history-item .h-preview { display: none; }
-}
-"""
-
-w("safeshare_ai/_parts/styles_css.txt", CSS)
-print("styles_css.txt written")
-
-JS = ""
-JS += """
 // SafeShare AI - Frontend Script
 // Wires UI to FastAPI backend with real-time WebSocket scanning
 
@@ -421,9 +50,7 @@ window.addEventListener('load', () => {
   startTyping();
   loadHistory();
 });
-"""
 
-JS += """
 // ── Typing animation ──────────────────────────────────────────────────────────
 function startTyping() {
   const lines = [
@@ -475,9 +102,7 @@ function initParticles() {
   }
   draw();
 }
-"""
 
-JS += """
 // ── Tab switching ─────────────────────────────────────────────────────────────
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -538,9 +163,7 @@ async function startScan() {
     await runAPIScan('url', url);
   }
 }
-"""
 
-JS += """
 // ── WebSocket live scan (no auth required) ────────────────────────────────────
 function runWebSocketScan(text) {
   showScanning();
@@ -593,9 +216,7 @@ function handleStreamEvent(msg) {
   }
   if (msg.event === 'error') addLog(`[ERR] ${msg.message}`);
 }
-"""
 
-JS += """
 // ── API scan (authenticated) ──────────────────────────────────────────────────
 async function runAPIScan(type, input) {
   showScanning();
@@ -655,9 +276,7 @@ async function runImageScan(file) {
     simulateScan('image scan');
   }
 }
-"""
 
-JS += """
 // ── Simulation fallback (no backend) ─────────────────────────────────────────
 function simulateScan(input) {
   const stages = ['stage-pii','stage-nlp','stage-anomaly','stage-risk'];
@@ -689,7 +308,7 @@ function simulateScan(input) {
 
 function getMockResult(input) {
   const hasCred = /password|api.?key|token|secret/i.test(input);
-  const hasEmail = /[a-z0-9._%+\\-]+@[a-z0-9.\\-]+\\.[a-z]{2,}/i.test(input);
+  const hasEmail = /[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}/i.test(input);
   const hasPAN = /[A-Z]{5}[0-9]{4}[A-Z]/i.test(input);
   const score = hasCred ? 0.82 : hasEmail ? 0.45 : hasPAN ? 0.65 : 0.12;
   const level = score > 0.75 ? 'critical' : score > 0.55 ? 'high' : score > 0.35 ? 'medium' : score > 0.1 ? 'low' : 'safe';
@@ -729,9 +348,7 @@ function getMockResult(input) {
     anomaly: { is_anomaly: hasCred, anomaly_score: hasCred ? 0.78 : 0.12, explanation: hasCred ? 'Anomaly detected: credential patterns detected. Score: 0.78' : 'Content appears within normal parameters.' },
   };
 }
-"""
 
-JS += """
 // ── Render results ────────────────────────────────────────────────────────────
 function renderResults(data) {
   document.getElementById('scanning').classList.add('hidden');
@@ -806,9 +423,7 @@ function renderResults(data) {
   const recList = document.getElementById('rec-list');
   recList.innerHTML = (risk.recommendations || ['No recommendations.']).map(r => `<li>${r}</li>`).join('');
 }
-"""
 
-JS += """
 // ── Build threat cards ────────────────────────────────────────────────────────
 function buildThreatCards(pii, nlp, anomaly, level) {
   const container = document.getElementById('threat-cards');
@@ -891,9 +506,7 @@ function animatePipelineStages() {
     }, i * 700);
   });
 }
-"""
 
-JS += """
 // ── Action buttons ────────────────────────────────────────────────────────────
 document.getElementById('new-scan-btn').addEventListener('click', () => {
   document.getElementById('dashboard').classList.add('hidden');
@@ -955,9 +568,7 @@ async function loadScanReport(scanId) {
     renderResults({ risk: data.risk_breakdown, pii: { detections: data.pii_detections, total_matches: data.pii_detections?.length || 0 }, nlp: { entities: data.nlp_entities } });
   } catch(e) {}
 }
-"""
 
-JS += """
 // ── Auth modal ────────────────────────────────────────────────────────────────
 document.getElementById('nav-login-btn').addEventListener('click', e => { e.preventDefault(); document.getElementById('auth-modal').classList.remove('hidden'); });
 document.getElementById('modal-close').addEventListener('click', () => document.getElementById('auth-modal').classList.add('hidden'));
@@ -1050,292 +661,3 @@ function addChatMessage(text, role) {
   msgs.appendChild(div);
   msgs.scrollTop = msgs.scrollHeight;
 }
-"""
-
-w("safeshare_ai/_parts/script_js.txt", JS)
-print("script_js.txt written")
-
-# ── Docker Compose ────────────────────────────────────────────────────────────
-w("safeshare_ai/_parts/docker_compose.txt", """version: '3.9'
-
-services:
-  db:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: safeshare
-      POSTGRES_PASSWORD: safeshare_pass
-      POSTGRES_DB: safeshare_db
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U safeshare"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
-    environment:
-      - DATABASE_URL=postgresql+asyncpg://safeshare:safeshare_pass@db:5432/safeshare_db
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/1
-      - CELERY_RESULT_BACKEND=redis://redis:6379/2
-      - SECRET_KEY=change-this-in-production-use-256-bit-key
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    volumes:
-      - ./backend:/app
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-
-  celery_worker:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    environment:
-      - DATABASE_URL=postgresql+asyncpg://safeshare:safeshare_pass@db:5432/safeshare_db
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/1
-      - CELERY_RESULT_BACKEND=redis://redis:6379/2
-    depends_on:
-      - redis
-      - db
-    volumes:
-      - ./backend:/app
-    command: celery -A app.celery_workers.celery_app worker --loglevel=info -Q text_scans,image_scans,url_scans
-
-  frontend:
-    image: nginx:alpine
-    ports:
-      - "3000:80"
-    volumes:
-      - ./frontend:/usr/share/nginx/html:ro
-    depends_on:
-      - backend
-
-volumes:
-  pgdata:
-""")
-
-# ── .env ──────────────────────────────────────────────────────────────────────
-w("safeshare_ai/_parts/env.txt", """# SafeShare AI - Environment Variables
-APP_VERSION=1.0.0
-DEBUG=false
-ENVIRONMENT=development
-
-DATABASE_URL=postgresql+asyncpg://safeshare:safeshare_pass@localhost:5432/safeshare_db
-REDIS_URL=redis://localhost:6379/0
-CELERY_BROKER_URL=redis://localhost:6379/1
-CELERY_RESULT_BACKEND=redis://localhost:6379/2
-
-SECRET_KEY=change-this-in-production-use-a-real-256-bit-secret-key
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-
-ALLOWED_ORIGINS=["http://localhost:3000","http://127.0.0.1:5500","http://localhost:5500"]
-
-TESSERACT_CMD=/usr/bin/tesseract
-MAX_IMAGE_SIZE_MB=10
-MAX_UPLOAD_SIZE_MB=50
-LOG_LEVEL=INFO
-""")
-
-# ── Dockerfile ────────────────────────────────────────────────────────────────
-w("safeshare_ai/_parts/dockerfile.txt", """FROM python:3.11-slim
-
-WORKDIR /app
-
-RUN apt-get update && apt-get install -y --no-install-recommends \\
-    tesseract-ocr libgl1 libglib2.0-0 gcc g++ \\
-    && rm -rf /var/lib/apt/lists/*
-
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-RUN python -m spacy download en_core_web_sm || true
-
-COPY . .
-
-EXPOSE 8000
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
-""")
-
-print("Docker/env files written.")
-
-# ── Alembic migration env ─────────────────────────────────────────────────────
-w("safeshare_ai/backend/alembic.ini", """[alembic]
-script_location = alembic
-prepend_sys_path = .
-sqlalchemy.url = postgresql+asyncpg://safeshare:safeshare_pass@localhost:5432/safeshare_db
-
-[loggers]
-keys = root,sqlalchemy,alembic
-[handlers]
-keys = console
-[formatters]
-keys = generic
-[logger_root]
-level = WARN
-handlers = console
-qualname =
-[logger_sqlalchemy]
-level = WARN
-handlers =
-qualname = sqlalchemy.engine
-[logger_alembic]
-level = INFO
-handlers =
-qualname = alembic
-[handler_console]
-class = StreamHandler
-args = (sys.stderr,)
-level = NOTSET
-formatter = generic
-[formatter_generic]
-format = %(levelname)-5.5s [%(name)s] %(message)s
-datefmt = %H:%M:%S
-""")
-
-w("safeshare_ai/backend/alembic/env.py", """import asyncio
-from logging.config import fileConfig
-from sqlalchemy.ext.asyncio import create_async_engine
-from alembic import context
-from app.core.config import settings
-from app.models.models import Base
-
-config = context.config
-if config.config_file_name:
-    fileConfig(config.config_file_name)
-
-target_metadata = Base.metadata
-
-def run_migrations_offline():
-    context.configure(url=settings.DATABASE_URL, target_metadata=target_metadata, literal_binds=True)
-    with context.begin_transaction():
-        context.run_migrations()
-
-async def run_migrations_online():
-    engine = create_async_engine(settings.DATABASE_URL)
-    async with engine.connect() as conn:
-        await conn.run_sync(lambda sync_conn: context.configure(connection=sync_conn, target_metadata=target_metadata))
-        async with conn.begin():
-            await conn.run_sync(lambda _: context.run_migrations())
-    await engine.dispose()
-
-if context.is_offline_mode():
-    run_migrations_offline()
-else:
-    asyncio.run(run_migrations_online())
-""")
-
-w("safeshare_ai/backend/alembic/versions/.gitkeep", "")
-
-# ── README ────────────────────────────────────────────────────────────────────
-w("safeshare_ai/README.md", """# SafeShare AI
-
-Enterprise AI-powered Data Loss Prevention platform.
-
-## Quick Start
-
-### With Docker (recommended)
-```bash
-cd safeshare_ai
-docker-compose up --build
-```
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8000/api/docs
-
-### Manual
-```bash
-# Backend
-cd safeshare_ai/backend
-pip install -r requirements.txt
-python -m spacy download en_core_web_sm
-uvicorn main:app --reload --port 8000
-
-# Frontend - open in browser
-# safeshare_ai/frontend/index.html
-```
-
-## Architecture
-- **Frontend**: Vanilla JS + CSS (cyberpunk theme), connects to FastAPI via REST + WebSocket
-- **Backend**: FastAPI + async Python, Celery workers, PostgreSQL, Redis
-- **AI Pipeline**: PII Detector → NLP (spaCy/Presidio) → Anomaly (Isolation Forest) → Risk Scorer
-- **OCR**: EasyOCR + Tesseract for screenshot analysis
-- **URL Analysis**: ML classifier + heuristic scoring
-
-## API Endpoints
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | /api/auth/register | Register user |
-| POST | /api/auth/login | Login |
-| POST | /api/scan/text | Scan text content |
-| POST | /api/scan/image | Scan image/screenshot |
-| POST | /api/scan/url | Analyze URL |
-| WS   | /api/scan/live | Real-time streaming scan |
-| GET  | /api/threats/history | Scan history |
-| GET  | /api/dashboard/analytics | Analytics |
-| GET  | /api/health | Health check |
-""")
-
-print("All files complete!")
-
-# ── nginx.conf ────────────────────────────────────────────────────────────────
-NGINX = "server {\n"
-NGINX += "    listen 80;\n"
-NGINX += "    server_name localhost;\n"
-NGINX += "    root /usr/share/nginx/html;\n"
-NGINX += "    index index.html;\n\n"
-NGINX += "    location / {\n"
-NGINX += "        try_files $uri $uri/ /index.html;\n"
-NGINX += "        add_header Cache-Control \"no-cache\";\n"
-NGINX += "    }\n\n"
-NGINX += "    location /api/ {\n"
-NGINX += "        proxy_pass http://backend:8000/api/;\n"
-NGINX += "        proxy_http_version 1.1;\n"
-NGINX += "        proxy_set_header Upgrade $http_upgrade;\n"
-NGINX += "        proxy_set_header Connection \"upgrade\";\n"
-NGINX += "        proxy_set_header Host $host;\n"
-NGINX += "        proxy_set_header X-Real-IP $remote_addr;\n"
-NGINX += "        proxy_read_timeout 300s;\n"
-NGINX += "    }\n"
-NGINX += "}\n"
-w("safeshare_ai/frontend/nginx.conf", NGINX)
-
-# ── start.py launcher ─────────────────────────────────────────────────────────
-START = "import subprocess, os, time, webbrowser\n\n"
-START += "backend_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'backend')\n"
-START += "frontend_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'frontend')\n\n"
-START += "print('[SafeShare AI] Installing dependencies...')\n"
-START += "subprocess.run('pip install -r requirements.txt -q', shell=True, cwd=backend_dir)\n\n"
-START += "print('[SafeShare AI] Starting backend on http://localhost:8000 ...')\n"
-START += "proc = subprocess.Popen('uvicorn main:app --host 0.0.0.0 --port 8000 --reload', shell=True, cwd=backend_dir)\n\n"
-START += "time.sleep(3)\n"
-START += "index = os.path.join(frontend_dir, 'index.html')\n"
-START += "url = 'file:///' + index.replace(os.sep, '/')\n"
-START += "print('[SafeShare AI] Opening frontend:', url)\n"
-START += "webbrowser.open(url)\n"
-START += "print('[SafeShare AI] API docs: http://localhost:8000/api/docs')\n"
-START += "print('[SafeShare AI] Press Ctrl+C to stop.')\n"
-START += "try:\n    proc.wait()\nexcept KeyboardInterrupt:\n    proc.terminate()\n    print('[SafeShare AI] Stopped.')\n"
-w("safeshare_ai/start.py", START)
-
-print("nginx.conf and start.py written.")

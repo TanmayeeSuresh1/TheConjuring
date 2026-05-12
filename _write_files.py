@@ -463,14 +463,4 @@ for init_path in [
 print("All backend files written.")
 
 
-# ── FRONTEND: index.html ──────────────────────────────────────────────────────
-w("safeshare_ai/frontend/index.html", open("safeshare_ai/_parts/index_html.txt", encoding="utf-8").read())
-w("safeshare_ai/frontend/styles.css", open("safeshare_ai/_parts/styles_css.txt", encoding="utf-8").read())
-w("safeshare_ai/frontend/script.js", open("safeshare_ai/_parts/script_js.txt", encoding="utf-8").read())
-
-# ── Docker & env ──────────────────────────────────────────────────────────────
-w("safeshare_ai/docker-compose.yml", open("safeshare_ai/_parts/docker_compose.txt", encoding="utf-8").read())
-w("safeshare_ai/backend/.env", open("safeshare_ai/_parts/env.txt", encoding="utf-8").read())
-w("safeshare_ai/backend/Dockerfile", open("safeshare_ai/_parts/dockerfile.txt", encoding="utf-8").read())
-
-print("All files written successfully.")
+print("Backend files written successfully.")
