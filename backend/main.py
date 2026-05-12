@@ -15,7 +15,7 @@ from fastapi.responses import JSONResponse
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from starlette.responses import Response
 
-from app.api.routes import scan, threats, dashboard, admin, policies, auth
+from app.api.routes import scan, threats, dashboard, admin, policies, auth, breach_guide
 from app.core.config import settings
 from app.core.database import init_db
 from app.core.redis_client import init_redis
@@ -114,6 +114,7 @@ app.include_router(threats.router, prefix="/api/threats", tags=["Threat Intellig
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
 app.include_router(policies.router, prefix="/api/policies", tags=["Policies"])
+app.include_router(breach_guide.router, prefix="/api/breach-guide", tags=["Breach Guide"])
 
 
 @app.get("/api/health")

@@ -1,5 +1,5 @@
 
-// SafeShare AI - Frontend Script
+// DEFENDO - Frontend Script
 // Wires UI to FastAPI backend with real-time WebSocket scanning
 
 const API = 'http://localhost:8000/api';
@@ -21,11 +21,13 @@ function setToken(token, email) {
   localStorage.setItem('ss_email', email);
   document.getElementById('nav-login-btn').classList.add('hidden');
   const badge = document.getElementById('user-badge');
-  const isGuest = email === 'guest@safeshare.ai';
+  const isGuest = email === 'guest@defendo.ai';
   badge.textContent = isGuest ? 'GUEST' : email.split('@')[0].toUpperCase();
   badge.title = isGuest ? 'Click to login with an account' : `Logged in as ${email}`;
   badge.style.cursor = 'pointer';
   badge.classList.remove('hidden');
+  // Show logout only for real accounts, not guest
+  document.getElementById('nav-logout-btn').classList.toggle('hidden', isGuest);
 }
 
 function clearToken() {
@@ -34,32 +36,29 @@ function clearToken() {
   localStorage.removeItem('ss_email');
   document.getElementById('nav-login-btn').classList.remove('hidden');
   document.getElementById('user-badge').classList.add('hidden');
+  document.getElementById('nav-logout-btn').classList.add('hidden');
 }
 
 // ── Loader ────────────────────────────────────────────────────────────────────
 window.addEventListener('load', async () => {
   const savedEmail = localStorage.getItem('ss_email');
-  const isGuest = savedEmail === 'guest@safeshare.ai';
+  const isGuest = savedEmail === 'guest@defendo.ai';
+  const hasRealSession = savedEmail && authToken && !isGuest;
 
-  // Always refresh guest token on load (they expire); real user tokens are kept
-  if (!authToken || isGuest) {
-    try {
-      const res = await fetch(`${API}/auth/guest`, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
-      if (res.ok) {
-        const data = await res.json();
-        setToken(data.access_token, 'guest@safeshare.ai');
-      }
-    } catch(e) {
-      // Backend offline — set a local placeholder so scan falls back to simulation
-      if (!authToken) setToken('guest-offline', 'guest@safeshare.ai');
-      console.warn('Guest login failed, using offline mode');
-    }
-  } else if (savedEmail && authToken) {
-    // Restore real user session from localStorage
+  if (hasRealSession) {
     document.getElementById('nav-login-btn').classList.add('hidden');
     const badge = document.getElementById('user-badge');
     badge.textContent = savedEmail.split('@')[0].toUpperCase();
     badge.classList.remove('hidden');
+    document.getElementById('auth-modal').classList.add('hidden');
+  } else {
+    // Always show login modal on first visit / guest
+    authToken = null;
+    localStorage.removeItem('ss_token');
+    localStorage.removeItem('ss_email');
+    document.getElementById('auth-modal').classList.remove('hidden');
+    // Start stream after a tick so DOM is painted and track heights are available
+    setTimeout(() => startIconStream(), 100);
   }
 
   setTimeout(() => {
@@ -69,6 +68,13 @@ window.addEventListener('load', async () => {
   initParticles();
   startTyping();
   loadHistory();
+  loadSecurityRules();
+});
+
+  startTyping();
+  startIconStream();
+  loadHistory();
+  loadSecurityRules();
 });
 
 // ── Typing animation ──────────────────────────────────────────────────────────
@@ -573,6 +579,7 @@ function animatePipelineStages() {
 // ── Action buttons ────────────────────────────────────────────────────────────
 document.getElementById('new-scan-btn').addEventListener('click', () => {
   document.getElementById('dashboard').classList.add('hidden');
+  document.getElementById('breach-guide').classList.add('hidden');
   document.getElementById('upload').classList.remove('hidden');
   document.getElementById('text-input').value = '';
   document.getElementById('url-input').value = '';
@@ -597,7 +604,7 @@ document.getElementById('export-btn').addEventListener('click', () => {
   const blob = new Blob([JSON.stringify(currentScanResult, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `safeshare_report_${Date.now()}.json`;
+  a.download = `defendo_report_${Date.now()}.json`;
   a.click();
 });
 
@@ -636,28 +643,55 @@ async function loadScanReport(scanId) {
 document.getElementById('nav-login-btn').addEventListener('click', e => { e.preventDefault(); document.getElementById('auth-modal').classList.remove('hidden'); });
 // Badge click — lets guest switch to a real account
 document.getElementById('user-badge').addEventListener('click', () => {
-  if (localStorage.getItem('ss_email') === 'guest@safeshare.ai') {
+  if (localStorage.getItem('ss_email') === 'guest@defendo.ai') {
     document.getElementById('auth-modal').classList.remove('hidden');
   }
 });
-document.getElementById('modal-close').addEventListener('click', () => document.getElementById('auth-modal').classList.add('hidden'));
-document.getElementById('auth-modal').addEventListener('click', e => { if (e.target === document.getElementById('auth-modal')) document.getElementById('auth-modal').classList.add('hidden'); });
+
+// Logout — clears session and re-issues a guest token
+document.getElementById('nav-logout-btn').addEventListener('click', async () => {
+  clearToken();
+  // Re-issue guest token so the app stays functional
+  try {
+    const res = await fetch(`${API}/auth/guest`, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+    if (res.ok) {
+      const data = await res.json();
+      setToken(data.access_token, 'guest@defendo.ai');
+    }
+  } catch(e) {
+    setToken('guest-offline', 'guest@defendo.ai');
+  }
+  // Reset UI to scan page
+  document.getElementById('dashboard').classList.add('hidden');
+  document.getElementById('breach-guide').classList.add('hidden');
+  document.getElementById('upload').classList.remove('hidden');
+  document.getElementById('upload').scrollIntoView({ behavior: 'smooth' });
+  addChatMessage('Logged out. Running as Guest — all scan features still available.', 'bot');
+});
+document.getElementById('modal-close').addEventListener('click', () => {
+  // Only allow closing if already authenticated
+  if (authToken) document.getElementById('auth-modal').classList.add('hidden');
+});
+document.getElementById('auth-modal').addEventListener('click', e => {
+  // Only close on overlay click if already authenticated
+  if (e.target === document.getElementById('auth-modal') && authToken) {
+    document.getElementById('auth-modal').classList.add('hidden');
+  }
+});
 
 // Guest login button
 document.getElementById('guest-btn').addEventListener('click', async () => {
-  const msg = document.getElementById('login-msg');
   try {
     const res = await fetch(`${API}/auth/guest`, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
     if (!res.ok) throw new Error('Guest login failed');
     const data = await res.json();
-    setToken(data.access_token, 'guest@safeshare.ai');
-    document.getElementById('auth-modal').classList.add('hidden');
-    addChatMessage('Guest session started. All features unlocked — text, image, and URL scanning available.', 'bot');
+    setToken(data.access_token, 'guest@defendo.ai');
   } catch(e) {
-    // If backend is offline, set a local guest flag so UI still works
-    setToken('guest-offline', 'guest@safeshare.ai');
-    document.getElementById('auth-modal').classList.add('hidden');
+    setToken('guest-offline', 'guest@defendo.ai');
   }
+  document.getElementById('auth-modal').classList.add('hidden');
+  stopIconStream();
+  addChatMessage('Guest session started. All features unlocked — text, image, and URL scanning available.', 'bot');
 });
 
 document.querySelectorAll('.auth-tab').forEach(tab => {
@@ -681,7 +715,10 @@ document.getElementById('login-btn').addEventListener('click', async () => {
     if (!res.ok) throw new Error(data.detail || 'Login failed');
     setToken(data.access_token, email);
     msg.textContent = 'Login successful!'; msg.className = 'auth-msg success';
-    setTimeout(() => document.getElementById('auth-modal').classList.add('hidden'), 800);
+    setTimeout(() => {
+      document.getElementById('auth-modal').classList.add('hidden');
+      stopIconStream();
+    }, 800);
     loadHistory();
   } catch(e) { msg.textContent = e.message; msg.className = 'auth-msg error'; }
 });
@@ -699,7 +736,10 @@ document.getElementById('register-btn').addEventListener('click', async () => {
     if (!res.ok) throw new Error(data.detail || 'Registration failed');
     setToken(data.access_token, email);
     msg.textContent = 'Account created!'; msg.className = 'auth-msg success';
-    setTimeout(() => document.getElementById('auth-modal').classList.add('hidden'), 800);
+    setTimeout(() => {
+      document.getElementById('auth-modal').classList.add('hidden');
+      stopIconStream();
+    }, 800);
   } catch(e) { msg.textContent = e.message; msg.className = 'auth-msg error'; }
 });
 
@@ -726,7 +766,15 @@ const AURA_RESPONSES = {
   'subdomain': 'Deep subdomains containing phishing keywords (e.g. paypal.verify.account.security-update.com) are flagged as SUSPICIOUS_SUBDOMAIN.',
   'ssl': 'URLs without HTTPS are flagged as NO_SSL. Always verify SSL certificates before entering credentials on any site.',
   'url': 'Switch to the URL tab and paste any link. The analyzer checks entropy, typosquatting, suspicious TLDs, phishing keywords, IP usage, and SSL validity.',
-  'default': 'I can help with: scanning text/images/URLs, understanding risk scores, API key detection, phishing analysis, and PII redaction. What do you need?',
+  'breach': 'Click "Breach Guide" in the nav bar for the full Data Breach Emergency Guide — immediate actions, password tips, recovery checklist, and India cybercrime helpline.',
+  'hacked': 'If you think you\'ve been hacked: change passwords immediately, enable 2FA, freeze bank cards if needed, and call the cybercrime helpline 1930. Check the Breach Guide in the nav.',
+  '1930': 'The national cybercrime helpline in India is 1930. You can also report online at cybercrime.gov.in. Report fraud immediately and keep transaction IDs as evidence.',
+  'cybercrime': 'Report cybercrime in India via helpline 1930 or at cybercrime.gov.in. Available 24/7. Keep screenshots and transaction IDs ready before calling.',
+  '2fa': 'Two-factor authentication (2FA) adds a second verification step. Enable it on email, banking, and social accounts immediately after any suspected breach.',
+  'logout': 'Click the LOGOUT button in the top nav to end your session. You will automatically continue as a Guest with full scan access.',
+  'dos': 'The Do\'s & Don\'ts panel appears below your scan results. Key rules: use strong passwords, enable 2FA, never share OTPs, and always logout after use.',
+  'donts': 'Never share OTPs or passwords, never reuse passwords, avoid logging in on public devices, and never store credentials in plain text or chat.',
+  'default': 'I can help with: scanning text/images/URLs, risk scores, API key detection, phishing analysis, PII redaction, data breach response, and security rules. What do you need?',
 };
 
 document.getElementById('send-msg-btn').addEventListener('click', sendChat);
@@ -741,7 +789,12 @@ function sendChat() {
   setTimeout(() => {
     const lower = text.toLowerCase();
     const key = Object.keys(AURA_RESPONSES).find(k => k !== 'default' && lower.includes(k));
-    addChatMessage(AURA_RESPONSES[key || 'default'], 'bot');
+    const response = AURA_RESPONSES[key || 'default'];
+    addChatMessage(response, 'bot');
+    // Auto-open breach guide if user asks about breach/hacked topics
+    if (key && ['breach', 'hacked', '1930', 'cybercrime', '2fa'].includes(key)) {
+      setTimeout(() => showBreachGuide(), 800);
+    }
   }, 400);
 }
 
@@ -752,4 +805,282 @@ function addChatMessage(text, role) {
   div.textContent = text;
   msgs.appendChild(div);
   msgs.scrollTop = msgs.scrollHeight;
+}
+
+// ── Flowing card stream (login modal — two lanes) ─────────────────────────────
+const STREAM_DOS = [
+  { icon: 'fa-lock',             label: 'Use strong passwords'       },
+  { icon: 'fa-right-from-bracket', label: 'Logout after every session' },
+  { icon: 'fa-shield-halved',    label: 'Keep credentials private'   },
+  { icon: 'fa-mobile-screen',    label: 'Enable 2FA everywhere'      },
+  { icon: 'fa-magnifying-glass', label: 'Scan before sharing'        },
+  { icon: 'fa-bell',             label: 'Report suspicious activity' },
+  { icon: 'fa-key',              label: 'Use a password manager'     },
+  { icon: 'fa-rotate',           label: 'Rotate passwords regularly' },
+];
+const STREAM_DONTS = [
+  { icon: 'fa-share-nodes',          label: "Don't share OTPs"           },
+  { icon: 'fa-copy',                 label: "Don't reuse passwords"       },
+  { icon: 'fa-laptop',               label: "Avoid public devices"        },
+  { icon: 'fa-link',                 label: "Don't click unknown links"   },
+  { icon: 'fa-file-lines',           label: "No plain-text credentials"   },
+  { icon: 'fa-triangle-exclamation', label: "Don't ignore alerts"         },
+  { icon: 'fa-eye-slash',            label: "Don't expose API keys"       },
+  { icon: 'fa-wifi',                 label: "Avoid public Wi-Fi for auth" },
+];
+
+let _doIdx = 0, _dontIdx = 0;
+let _doTimer = null, _dontTimer = null;
+
+function startIconStream() {
+  const doTrack   = document.getElementById('stream-do-track');
+  const dontTrack = document.getElementById('stream-dont-track');
+  if (!doTrack || !dontTrack) return;
+
+  function spawnCard(track, items, idx, type) {
+    const item = items[idx % items.length];
+    const trackH = track.offsetHeight || 320;
+
+    const card = document.createElement('div');
+    card.className = `stream-card stream-card-${type}`;
+    // Random duration 3.5–5.5s for natural feel
+    const dur = (3.5 + Math.random() * 2).toFixed(2);
+    card.style.setProperty('--dur', dur + 's');
+    card.style.bottom = '-60px';
+    card.innerHTML = `<i class="fa-solid ${item.icon}"></i><span>${item.label}</span>`;
+    track.appendChild(card);
+    card.addEventListener('animationend', () => card.remove());
+    return idx + 1;
+  }
+
+  // Stagger the two lanes so they don't start simultaneously
+  _doIdx = 0; _dontIdx = 0;
+  spawnCard(doTrack, STREAM_DOS, _doIdx, 'do'); _doIdx++;
+  setTimeout(() => {
+    spawnCard(dontTrack, STREAM_DONTS, _dontIdx, 'dont'); _dontIdx++;
+  }, 900);
+
+  _doTimer   = setInterval(() => { _doIdx   = spawnCard(doTrack,   STREAM_DOS,   _doIdx,   'do');   }, 1400);
+  _dontTimer = setInterval(() => { _dontIdx = spawnCard(dontTrack, STREAM_DONTS, _dontIdx, 'dont'); }, 1400);
+}
+
+function stopIconStream() {
+  clearInterval(_doTimer);
+  clearInterval(_dontTimer);
+  _doTimer = _dontTimer = null;
+  const doTrack   = document.getElementById('stream-do-track');
+  const dontTrack = document.getElementById('stream-dont-track');
+  if (doTrack)   doTrack.innerHTML   = '';
+  if (dontTrack) dontTrack.innerHTML = '';
+}
+
+// ── Nav: Dashboard link shows dashboard section ───────────────────────────────
+document.querySelector('a[href="#dashboard"]').addEventListener('click', e => {
+  e.preventDefault();
+  if (!currentScanResult) {
+    // No scan yet — scroll to upload and hint
+    document.getElementById('upload').classList.remove('hidden');
+    document.getElementById('breach-guide').classList.add('hidden');
+    document.getElementById('upload').scrollIntoView({ behavior: 'smooth' });
+    addChatMessage('Run a scan first to see your dashboard results.', 'bot');
+  } else {
+    document.getElementById('upload').classList.add('hidden');
+    document.getElementById('breach-guide').classList.add('hidden');
+    document.getElementById('dashboard').classList.remove('hidden');
+    document.getElementById('dashboard').scrollIntoView({ behavior: 'smooth' });
+  }
+});
+
+// ── Nav: Scan link ────────────────────────────────────────────────────────────
+document.querySelector('a[href="#upload"]').addEventListener('click', e => {
+  e.preventDefault();
+  document.getElementById('breach-guide').classList.add('hidden');
+  document.getElementById('upload').classList.remove('hidden');
+  document.getElementById('upload').scrollIntoView({ behavior: 'smooth' });
+});
+function showBreachGuide() {
+  document.getElementById('upload').classList.add('hidden');
+  document.getElementById('scanning').classList.add('hidden');
+  document.getElementById('dashboard').classList.add('hidden');
+  document.getElementById('history-section').classList.add('hidden');
+  document.getElementById('breach-guide').classList.remove('hidden');
+  document.getElementById('breach-guide').scrollIntoView({ behavior: 'smooth' });
+}
+
+// Fetch rules from API — stream is JS-driven, no DOM update needed
+async function loadSecurityRules() {
+  // Rules are hardcoded in STREAM_DOS / STREAM_DONTS above.
+  // This call is kept for future dynamic rule loading from the backend.
+  try {
+    await fetch(`${API}/breach-guide/rules`);
+  } catch(e) { /* offline — static rules already in JS */ }
+}
+
+// Nav link
+document.getElementById('nav-breach-btn').addEventListener('click', e => {
+  e.preventDefault();
+  showBreachGuide();
+});
+
+// Tab switching inside breach guide
+document.querySelectorAll('.breach-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    // Update active tab
+    document.querySelectorAll('.breach-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    // Show matching content panel
+    const target = btn.dataset.breach;
+    document.querySelectorAll('.breach-content').forEach(c => c.classList.add('hidden'));
+    document.getElementById('breach-' + target).classList.remove('hidden');
+  });
+});
+
+// If user clicks "New Scan" or "Scan" nav while breach guide is open, hide it
+document.querySelector('a[href="#upload"]').addEventListener('click', () => {
+  document.getElementById('breach-guide').classList.add('hidden');
+  document.getElementById('upload').classList.remove('hidden');
+});
+
+// ── Pop Mode — floating widget with auto-scan ─────────────────────────────────
+let popAutoScan = true;
+let popDebounce = null;
+let popWidget   = null;
+
+document.getElementById('pop-mode-btn').addEventListener('click', () => {
+  enterPopMode();
+});
+
+function enterPopMode() {
+  // Collapse main app
+  document.getElementById('upload').classList.add('hidden');
+  document.getElementById('dashboard').classList.add('hidden');
+  document.getElementById('scanning').classList.add('hidden');
+  document.getElementById('breach-guide').classList.add('hidden');
+  document.getElementById('history-section').classList.add('hidden');
+  document.querySelector('.hero').classList.add('hidden');
+
+  // Show widget
+  const w = document.getElementById('pop-widget');
+  w.classList.remove('hidden');
+  popWidget = w;
+
+  // Show last result if available
+  if (currentScanResult) renderPopResult(currentScanResult);
+
+  // Start monitoring all inputs on the page
+  startPopAutoScan();
+}
+
+function exitPopMode() {
+  document.getElementById('pop-widget').classList.add('hidden');
+  document.querySelector('.hero').classList.remove('hidden');
+  document.getElementById('upload').classList.remove('hidden');
+  stopPopAutoScan();
+}
+
+// ── Pop orb click — toggle panel ──────────────────────────────────────────────
+document.getElementById('pop-orb').addEventListener('click', () => {
+  document.getElementById('pop-panel').classList.toggle('pop-panel-open');
+});
+
+document.getElementById('pop-close').addEventListener('click', exitPopMode);
+
+document.getElementById('pop-expand-btn').addEventListener('click', () => {
+  exitPopMode();
+  document.getElementById('upload').scrollIntoView({ behavior: 'smooth' });
+});
+
+document.getElementById('pop-auto-toggle').addEventListener('click', () => {
+  popAutoScan = !popAutoScan;
+  const icon  = document.getElementById('pop-auto-icon');
+  const label = document.getElementById('pop-auto-label');
+  icon.className  = popAutoScan ? 'fa-solid fa-bolt' : 'fa-solid fa-bolt-slash';
+  label.textContent = `Auto-scan: ${popAutoScan ? 'ON' : 'OFF'}`;
+  if (popAutoScan) startPopAutoScan(); else stopPopAutoScan();
+});
+
+// ── Auto-scan: watch all inputs on the page ───────────────────────────────────
+let _popInputHandler = null;
+
+function startPopAutoScan() {
+  if (_popInputHandler) return;
+  _popInputHandler = (e) => {
+    if (!popAutoScan) return;
+    const el = e.target;
+    const tag = el.tagName.toLowerCase();
+    if (tag !== 'input' && tag !== 'textarea' && !el.isContentEditable) return;
+    const text = el.value || el.innerText || '';
+    if (text.length < 6) return;
+    clearTimeout(popDebounce);
+    popDebounce = setTimeout(() => runPopScan(text), 500);
+  };
+  document.addEventListener('input', _popInputHandler, true);
+}
+
+function stopPopAutoScan() {
+  if (_popInputHandler) {
+    document.removeEventListener('input', _popInputHandler, true);
+    _popInputHandler = null;
+  }
+}
+
+async function runPopScan(text) {
+  try {
+    const res = await fetch(`${API}/scan/text`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ text }),
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    renderPopResult(data);
+  } catch(e) {
+    // Backend offline — use local pattern detection
+    renderPopResult(getMockResult(text));
+  }
+}
+
+function renderPopResult(data) {
+  const risk  = data.risk  || {};
+  const pii   = data.pii   || {};
+  const score = Math.round((risk.final_score || 0) * 100);
+  const level = risk.risk_level || 'safe';
+
+  // Update orb dot colour
+  const dot = document.getElementById('pop-score-dot');
+  dot.className = `pop-score-dot ${level}`;
+
+  // Badge + score
+  const badge = document.getElementById('pop-badge');
+  badge.textContent = score > 65 ? 'DANGEROUS' : score > 35 ? 'WARNING' : 'SAFE';
+  badge.className   = `pop-badge ${level}`;
+  document.getElementById('pop-score-val').textContent = score + '%';
+
+  // Suggestions
+  const sugBox = document.getElementById('pop-suggestions');
+  const detections = pii.detections || [];
+  const recs = risk.recommendations || [];
+
+  if (detections.length > 0 || score > 30) {
+    const items = [
+      ...detections.slice(0, 3).map(d =>
+        `<div class="pop-suggestion warn"><i class="fa-solid fa-triangle-exclamation"></i> <b>${d.label}</b> detected — consider redacting</div>`
+      ),
+      ...recs.slice(0, 2).map(r =>
+        `<div class="pop-suggestion info"><i class="fa-solid fa-lightbulb"></i> ${r}</div>`
+      ),
+    ];
+    sugBox.innerHTML = items.join('');
+    document.getElementById('pop-body').innerHTML = '';
+  } else {
+    sugBox.innerHTML = '';
+    document.getElementById('pop-body').innerHTML =
+      '<p class="pop-idle"><i class="fa-solid fa-circle-check"></i> No threats detected.</p>';
+  }
+
+  // Auto-open panel if dangerous
+  if (level === 'critical' || level === 'high') {
+    document.getElementById('pop-panel').classList.add('pop-panel-open');
+  }
 }

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Safe Share Assistant | Cyber Security</title>
+  <title>DEFENDO | AI Cybersecurity</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,13 +25,15 @@
   <header>
     <div class="logo">
       <i class="fa-solid fa-shield-halved"></i>
-      <span>AI_SAFE_SHARE</span>
+      <span>DEFENDO</span>
     </div>
     <nav>
       <a href="#upload" class="cyber-link">Scan</a>
       <a href="#dashboard" class="cyber-link">Dashboard</a>
+      <a href="#breach-guide" class="cyber-link" id="nav-breach-btn"><i class="fa-solid fa-triangle-exclamation"></i> Breach Guide</a>
       <a href="#" class="cyber-link" id="nav-login-btn">Login</a>
       <span class="user-badge hidden" id="user-badge"></span>
+      <button class="cyber-btn sm-btn hidden" id="nav-logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
     </nav>
   </header>
 
@@ -53,22 +55,27 @@
 
     <div class="tab-content active" id="tab-text">
       <div class="upload-container" id="drop-zone">
-        <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
-        <p>DRAG &amp; DROP FILES OR PASTE TEXT HERE</p>
-        <textarea id="text-input" placeholder="Paste raw text, code, messages, or credentials here to scan for vulnerabilities..." rows="6"></textarea>
+        <i class="fa-solid fa-cloud-arrow-up upload-icon" id="drop-zone-icon"></i>
+        <p id="drop-zone-label">DRAG &amp; DROP A FILE OR CLICK TO BROWSE</p>
+        <input type="file" id="text-file-input" accept=".txt,.csv,.log,.json,.md,.py,.js,.ts,.env" style="display:none">
+        <button class="cyber-btn secondary-btn" id="text-browse-btn" style="margin-bottom:0.8rem">
+          <i class="fa-solid fa-folder-open"></i> BROWSE FILE
+        </button>
+        <textarea id="text-input" placeholder="Or paste raw text, code, messages, or credentials here to scan for vulnerabilities..." rows="5"></textarea>
         <div class="file-info" id="file-info"></div>
       </div>
     </div>
 
     <div class="tab-content hidden" id="tab-image">
       <div class="upload-container" id="image-drop-zone">
-        <i class="fa-solid fa-image upload-icon"></i>
-        <p>DROP SCREENSHOT / IMAGE HERE OR CLICK TO BROWSE</p>
+        <i class="fa-solid fa-image upload-icon" id="image-drop-icon"></i>
+        <p id="image-drop-label">DRAG &amp; DROP IMAGE HERE OR CLICK TO BROWSE</p>
         <input type="file" id="image-input" accept="image/*" style="display:none">
-        <button class="cyber-btn secondary-btn" onclick="document.getElementById('image-input').click()">
+        <button class="cyber-btn secondary-btn" id="image-browse-btn">
           <i class="fa-solid fa-folder-open"></i> BROWSE FILE
         </button>
         <div class="file-preview" id="image-preview"></div>
+        <div class="file-info" id="image-file-info"></div>
       </div>
     </div>
 
@@ -153,50 +160,227 @@
       <button class="cyber-btn" id="share-btn">PROCEED TO SHARE <i class="fa-solid fa-arrow-right"></i></button>
       <button class="cyber-btn secondary-btn" id="new-scan-btn">NEW SCAN <i class="fa-solid fa-rotate"></i></button>
       <button class="cyber-btn secondary-btn" id="export-btn">EXPORT REPORT <i class="fa-solid fa-download"></i></button>
+      <button class="cyber-btn secondary-btn" id="pop-mode-btn" title="Collapse to floating widget">
+        <i class="fa-solid fa-circle-dot"></i> POP MODE
+      </button>
     </div>
   </section>
-
   <section id="history-section" class="history-section glass-panel hidden">
     <h2><i class="fa-solid fa-clock-rotate-left"></i> SCAN HISTORY</h2>
     <div class="history-list" id="history-list"></div>
   </section>
 
+  <!-- ── Data Breach Emergency Guide ── -->
+  <section id="breach-guide" class="breach-guide-section hidden">
+    <div class="breach-guide-header glass-panel">
+      <h2><i class="fa-solid fa-triangle-exclamation"></i> DATA BREACH EMERGENCY GUIDE</h2>
+      <p class="breach-subtitle">Follow these steps immediately if you suspect a breach</p>
+    </div>
+
+    <div class="breach-tabs">
+      <button class="breach-tab active" data-breach="immediate"><i class="fa-solid fa-bolt"></i> Immediate Actions</button>
+      <button class="breach-tab" data-breach="passwords"><i class="fa-solid fa-key"></i> Password Safety</button>
+      <button class="breach-tab" data-breach="recovery"><i class="fa-solid fa-list-check"></i> Recovery Checklist</button>
+      <button class="breach-tab" data-breach="help"><i class="fa-solid fa-phone"></i> Cybercrime Help</button>
+    </div>
+
+    <div class="breach-content" id="breach-immediate">
+      <div class="breach-card glass-panel">
+        <div class="breach-card-header danger"><i class="fa-solid fa-siren-on"></i><h3>IMMEDIATE ACTIONS</h3></div>
+        <ul class="breach-list">
+          <li><i class="fa-solid fa-lock"></i> Change all important passwords right now</li>
+          <li><i class="fa-solid fa-right-from-bracket"></i> Logout from all devices and sessions</li>
+          <li><i class="fa-solid fa-credit-card"></i> Freeze bank cards if financial data was exposed</li>
+          <li><i class="fa-solid fa-mobile-screen"></i> Enable 2FA on every account immediately</li>
+          <li><i class="fa-solid fa-shield-virus"></i> Scan your device for malware</li>
+          <li><i class="fa-solid fa-clock-rotate-left"></i> Check email and account activity logs</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="breach-content hidden" id="breach-passwords">
+      <div class="breach-card glass-panel">
+        <div class="breach-card-header warning"><i class="fa-solid fa-key"></i><h3>PASSWORD SAFETY TIPS</h3></div>
+        <ul class="breach-list">
+          <li><i class="fa-solid fa-ruler"></i> Use 12+ character passwords minimum</li>
+          <li><i class="fa-solid fa-shuffle"></i> Mix uppercase, lowercase, numbers and symbols</li>
+          <li><i class="fa-solid fa-ban"></i> Never reuse passwords across sites</li>
+          <li><i class="fa-solid fa-user-slash"></i> Avoid personal info — name, DOB, phone number</li>
+          <li><i class="fa-solid fa-vault"></i> Use a password manager (Bitwarden, 1Password)</li>
+          <li><i class="fa-solid fa-rotate"></i> Rotate passwords every 90 days for critical accounts</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="breach-content hidden" id="breach-recovery">
+      <div class="breach-card glass-panel">
+        <div class="breach-card-header info"><i class="fa-solid fa-list-check"></i><h3>RECOVERY CHECKLIST</h3></div>
+        <ul class="breach-list">
+          <li><i class="fa-solid fa-envelope-circle-check"></i> Secure your email account first — it's the master key</li>
+          <li><i class="fa-solid fa-building-columns"></i> Change banking and UPI passwords immediately</li>
+          <li><i class="fa-solid fa-magnifying-glass"></i> Review login history for unknown access</li>
+          <li><i class="fa-solid fa-laptop-slash"></i> Remove unknown or unrecognised devices</li>
+          <li><i class="fa-solid fa-address-card"></i> Update recovery email and phone number</li>
+          <li><i class="fa-solid fa-chart-line"></i> Monitor transactions for the next 30 days</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="breach-content hidden" id="breach-help">
+      <div class="breach-card glass-panel">
+        <div class="breach-card-header safe"><i class="fa-solid fa-phone"></i><h3>CYBERCRIME HELP — INDIA</h3></div>
+        <ul class="breach-list">
+          <li><i class="fa-solid fa-phone-volume"></i> National Helpline: <span class="breach-highlight">1930</span></li>
+          <li><i class="fa-solid fa-globe"></i> Report online: <a href="https://cybercrime.gov.in" target="_blank" class="breach-link">cybercrime.gov.in</a></li>
+          <li><i class="fa-solid fa-clock"></i> Available 24/7 — report fraud immediately</li>
+          <li><i class="fa-solid fa-file-lines"></i> Keep screenshots and transaction IDs as evidence</li>
+          <li><i class="fa-solid fa-building"></i> Also contact your bank's fraud helpline directly</li>
+          <li><i class="fa-solid fa-shield-halved"></i> File an FIR at your nearest cyber crime cell</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
   <footer>
-    <p>&copy; 2026 AI SAFE SHARE ASSISTANT | SYSTEM_ONLINE</p>
+    <p>&copy; 2026 DEFENDO | SYSTEM_ONLINE</p>
   </footer>
 </div>
 
-<div class="modal-overlay hidden" id="auth-modal">
-  <div class="modal glass-panel">
+<div class="modal-overlay" id="auth-modal">
+  <div class="modal modal-wide glass-panel">
     <button class="modal-close" id="modal-close"><i class="fa-solid fa-xmark"></i></button>
-    <div class="auth-tabs">
-      <button class="auth-tab active" data-auth="login">LOGIN</button>
-      <button class="auth-tab" data-auth="register">REGISTER</button>
-    </div>
-    <div id="auth-login">
-      <input type="email" id="login-email" class="auth-input" placeholder="EMAIL">
-      <input type="password" id="login-password" class="auth-input" placeholder="PASSWORD">
-      <button class="cyber-btn full-width" id="login-btn">LOGIN <i class="fa-solid fa-right-to-bracket"></i></button>
-      <p class="auth-msg" id="login-msg"></p>
-    </div>
-    <div id="auth-register" class="hidden">
-      <input type="text" id="reg-name" class="auth-input" placeholder="FULL NAME">
-      <input type="email" id="reg-email" class="auth-input" placeholder="EMAIL">
-      <input type="password" id="reg-password" class="auth-input" placeholder="PASSWORD">
-      <input type="text" id="reg-org" class="auth-input" placeholder="ORGANIZATION (optional)">
-      <button class="cyber-btn full-width" id="register-btn">REGISTER <i class="fa-solid fa-user-plus"></i></button>
-      <p class="auth-msg" id="register-msg"></p>
-    </div>
-    <div class="auth-divider"><span>OR</span></div>
-    <button class="cyber-btn secondary-btn full-width" id="guest-btn">
-      CONTINUE AS GUEST <i class="fa-solid fa-user-secret"></i>
-    </button>
-    <p class="auth-guest-note">Full access — no account needed</p>
+
+    <div class="modal-layout">
+
+      <!-- ── Left: Auth form ── -->
+      <div class="modal-auth-col">
+        <div class="modal-brand">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span>DEFENDO</span>
+        </div>
+        <div class="auth-tabs">
+          <button class="auth-tab active" data-auth="login">LOGIN</button>
+          <button class="auth-tab" data-auth="register">REGISTER</button>
+        </div>
+        <div id="auth-login">
+          <input type="email" id="login-email" class="auth-input" placeholder="EMAIL">
+          <input type="password" id="login-password" class="auth-input" placeholder="PASSWORD">
+          <button class="cyber-btn full-width" id="login-btn">LOGIN <i class="fa-solid fa-right-to-bracket"></i></button>
+          <p class="auth-msg" id="login-msg"></p>
+        </div>
+        <div id="auth-register" class="hidden">
+          <input type="text" id="reg-name" class="auth-input" placeholder="FULL NAME">
+          <input type="email" id="reg-email" class="auth-input" placeholder="EMAIL">
+          <input type="password" id="reg-password" class="auth-input" placeholder="PASSWORD">
+          <input type="text" id="reg-org" class="auth-input" placeholder="ORGANIZATION (optional)">
+          <button class="cyber-btn full-width" id="register-btn">REGISTER <i class="fa-solid fa-user-plus"></i></button>
+          <p class="auth-msg" id="register-msg"></p>
+        </div>
+        <div class="auth-divider"><span>OR</span></div>
+        <button class="cyber-btn secondary-btn full-width" id="guest-btn">
+          CONTINUE AS GUEST <i class="fa-solid fa-user-secret"></i>
+        </button>
+        <p class="auth-guest-note">Full access — no account needed</p>
+      </div>
+
+      <!-- ── Right: Do's & Don'ts ── -->
+      <div class="modal-rules-col">
+
+        <div class="modal-rules-title">
+          <i class="fa-solid fa-shield-halved"></i> CYBER SAFETY RULES
+        </div>
+
+        <div class="modal-rules-grid">
+
+          <div class="modal-dos">
+            <div class="modal-dos-header">
+              <i class="fa-solid fa-circle-check"></i> DO'S
+            </div>
+            <ul class="modal-dos-list">
+              <li><i class="fa-solid fa-lock"></i> Use strong, unique passwords (12+ chars)</li>
+              <li><i class="fa-solid fa-right-from-bracket"></i> Logout after every session</li>
+              <li><i class="fa-solid fa-shield-halved"></i> Enable 2FA on all accounts</li>
+              <li><i class="fa-solid fa-magnifying-glass"></i> Scan files before sharing</li>
+              <li><i class="fa-solid fa-vault"></i> Use a password manager</li>
+              <li><i class="fa-solid fa-bell"></i> Report suspicious activity</li>
+            </ul>
+          </div>
+
+          <div class="modal-donts">
+            <div class="modal-donts-header">
+              <i class="fa-solid fa-circle-xmark"></i> DON'TS
+            </div>
+            <ul class="modal-donts-list">
+              <li><i class="fa-solid fa-share-nodes"></i> Share OTPs or passwords</li>
+              <li><i class="fa-solid fa-copy"></i> Reuse passwords across sites</li>
+              <li><i class="fa-solid fa-laptop"></i> Login on public devices</li>
+              <li><i class="fa-solid fa-link"></i> Click unknown links</li>
+              <li><i class="fa-solid fa-file-lines"></i> Store credentials in plain text</li>
+              <li><i class="fa-solid fa-triangle-exclamation"></i> Ignore security alerts</li>
+            </ul>
+          </div>
+
+        </div>
+
+        <!-- Subtle animated stream in background -->
+        <div class="modal-stream-wrap" aria-hidden="true">
+          <div class="stream-lane stream-lane-dont">
+            <div class="stream-lane-track" id="stream-dont-track"></div>
+          </div>
+          <div class="stream-lane-divider"></div>
+          <div class="stream-lane stream-lane-do">
+            <div class="stream-lane-track" id="stream-do-track"></div>
+          </div>
+        </div>
+
+        <div class="modal-rules-footer">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          Breach? Call <span class="modal-helpline">1930</span> or
+          <a href="https://cybercrime.gov.in" target="_blank" class="modal-helpline-link">cybercrime.gov.in</a>
+        </div>
+      </div>
+
+    </div><!-- end modal-layout -->
   </div>
 </div>
 
-<div class="chatbot-container glass-panel" id="chatbot">
-  <div class="chatbot-header" id="chatbot-toggle">
+<!-- ── Pop Mode floating widget ── -->
+<div id="pop-widget" class="pop-widget hidden">
+  <div class="pop-orb" id="pop-orb" title="Defendo — click to expand">
+    <svg viewBox="0 0 24 24" fill="none">
+      <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" fill="currentColor"/>
+      <path d="M9 12l2 2 4-4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <span class="pop-score-dot" id="pop-score-dot"></span>
+  </div>
+  <div class="pop-panel" id="pop-panel">
+    <div class="pop-panel-header">
+      <span class="pop-panel-title"><i class="fa-solid fa-shield-halved"></i> DEFENDO</span>
+      <div class="pop-panel-actions">
+        <button class="pop-icon-btn" id="pop-auto-toggle" title="Toggle auto-scan">
+          <i class="fa-solid fa-bolt" id="pop-auto-icon"></i>
+        </button>
+        <button class="pop-icon-btn" id="pop-close" title="Exit pop mode">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+    <div class="pop-status-row">
+      <div class="pop-badge safe" id="pop-badge">MONITORING</div>
+      <div class="pop-score-val" id="pop-score-val">—</div>
+    </div>
+    <div class="pop-body" id="pop-body">
+      <p class="pop-idle">Auto-scan active. Type anywhere to detect threats.</p>
+    </div>
+    <div class="pop-suggestions" id="pop-suggestions"></div>
+    <div class="pop-footer">
+      <span class="pop-auto-label" id="pop-auto-label">Auto-scan: ON</span>
+      <button class="pop-expand-btn" id="pop-expand-btn">Open Full App</button>
+    </div>
+  </div>
+</div>
+
+<div class="chatbot-container glass-panel" id="chatbot">  <div class="chatbot-header" id="chatbot-toggle">
     <div class="chatbot-title">
       <i class="fa-solid fa-robot"></i>
       <span>AURA.ai Assistant</span>
