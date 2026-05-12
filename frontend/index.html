@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Safe Share Assistant | Cyber Security</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+<div id="loader">
+  <div class="loader-content">
+    <div class="cyber-spinner"></div>
+    <p>INITIALIZING SECURE PROTOCOLS...</p>
+  </div>
+</div>
+
+<canvas id="particleCanvas"></canvas>
+
+<div class="app-wrapper">
+  <header>
+    <div class="logo">
+      <i class="fa-solid fa-shield-halved"></i>
+      <span>AI_SAFE_SHARE</span>
+    </div>
+    <nav>
+      <a href="#upload" class="cyber-link">Scan</a>
+      <a href="#dashboard" class="cyber-link">Dashboard</a>
+      <a href="#" class="cyber-link" id="nav-login-btn">Login</a>
+      <span class="user-badge hidden" id="user-badge"></span>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div class="hero-content">
+      <h1 class="glitch-text" data-text="SECURE YOUR DATA">SECURE YOUR DATA</h1>
+      <p id="typing-text"></p>
+      <a href="#upload" class="cyber-btn">INITIALIZE SCAN <i class="fa-solid fa-bolt"></i></a>
+    </div>
+  </section>
+
+  <section id="upload" class="upload-section glass-panel">
+    <h2><i class="fa-solid fa-file-shield"></i> INPUT DATA STREAM</h2>
+    <div class="scan-tabs">
+      <button class="tab-btn active" data-tab="text"><i class="fa-solid fa-font"></i> TEXT</button>
+      <button class="tab-btn" data-tab="image"><i class="fa-solid fa-image"></i> IMAGE / SCREENSHOT</button>
+      <button class="tab-btn" data-tab="url"><i class="fa-solid fa-link"></i> URL</button>
+    </div>
+
+    <div class="tab-content active" id="tab-text">
+      <div class="upload-container" id="drop-zone">
+        <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+        <p>DRAG &amp; DROP FILES OR PASTE TEXT HERE</p>
+        <textarea id="text-input" placeholder="Paste raw text, code, messages, or credentials here to scan for vulnerabilities..." rows="6"></textarea>
+        <div class="file-info" id="file-info"></div>
+      </div>
+    </div>
+
+    <div class="tab-content hidden" id="tab-image">
+      <div class="upload-container" id="image-drop-zone">
+        <i class="fa-solid fa-image upload-icon"></i>
+        <p>DROP SCREENSHOT / IMAGE HERE OR CLICK TO BROWSE</p>
+        <input type="file" id="image-input" accept="image/*" style="display:none">
+        <button class="cyber-btn secondary-btn" onclick="document.getElementById('image-input').click()">
+          <i class="fa-solid fa-folder-open"></i> BROWSE FILE
+        </button>
+        <div class="file-preview" id="image-preview"></div>
+      </div>
+    </div>
+
+    <div class="tab-content hidden" id="tab-url">
+      <div class="upload-container">
+        <i class="fa-solid fa-link upload-icon"></i>
+        <p>ENTER URL FOR PHISHING &amp; THREAT ANALYSIS</p>
+        <input type="text" id="url-input" class="url-field" placeholder="https://suspicious-domain.com/login">
+      </div>
+    </div>
+
+    <button class="cyber-btn secondary-btn full-width" id="start-scan-btn">
+      ANALYZE <i class="fa-solid fa-microchip"></i>
+    </button>
+  </section>
+
+  <section id="scanning" class="scanning-section glass-panel hidden">
+    <h2><i class="fa-solid fa-radar"></i> DEEP SCAN IN PROGRESS...</h2>
+    <div class="scan-visualizer">
+      <div class="radar-sweep"></div>
+      <div class="scan-bar">
+        <div class="scan-progress" id="scan-progress"></div>
+      </div>
+    </div>
+    <div class="pipeline-stages" id="pipeline-stages">
+      <div class="stage" id="stage-pii"><span class="stage-dot"></span> PII Detection</div>
+      <div class="stage" id="stage-nlp"><span class="stage-dot"></span> NLP Analysis</div>
+      <div class="stage" id="stage-anomaly"><span class="stage-dot"></span> Anomaly Detection</div>
+      <div class="stage" id="stage-risk"><span class="stage-dot"></span> Risk Scoring</div>
+    </div>
+    <ul class="scan-logs" id="scan-logs">
+      <li>[SYS] Initializing heuristics...</li>
+    </ul>
+  </section>
+
+  <section id="dashboard" class="dashboard-section hidden">
+    <div class="dashboard-header glass-panel">
+      <h2><i class="fa-solid fa-chart-pie"></i> RISK ASSESSMENT</h2>
+      <div class="risk-meter-container">
+        <div class="risk-meter" id="risk-meter">
+          <div class="risk-level" id="risk-level-bar" style="width:0%"></div>
+        </div>
+        <span id="risk-score">0%</span>
+      </div>
+      <div class="risk-badge" id="risk-badge">SAFE</div>
+    </div>
+
+    <div class="reasoning-panel glass-panel" id="reasoning-panel">
+      <h3><i class="fa-solid fa-brain"></i> AI REASONING CHAIN</h3>
+      <ol class="reasoning-list" id="reasoning-list"></ol>
+    </div>
+
+    <div class="pipeline-panel glass-panel" id="pipeline-panel">
+      <h3><i class="fa-solid fa-diagram-project"></i> DETECTION PIPELINE</h3>
+      <div class="pipeline-viz" id="pipeline-viz"></div>
+    </div>
+
+    <div class="threat-cards" id="threat-cards"></div>
+
+    <div class="entities-panel glass-panel hidden" id="entities-panel">
+      <h3><i class="fa-solid fa-tags"></i> NLP ENTITIES DETECTED</h3>
+      <div class="entity-tokens" id="entity-tokens"></div>
+    </div>
+
+    <div class="ocr-panel glass-panel hidden" id="ocr-panel">
+      <h3><i class="fa-solid fa-eye"></i> OCR EXTRACTED TEXT</h3>
+      <pre class="ocr-text" id="ocr-text"></pre>
+      <div class="ocr-meta" id="ocr-meta"></div>
+    </div>
+
+    <div class="url-panel glass-panel hidden" id="url-panel">
+      <h3><i class="fa-solid fa-globe"></i> URL THREAT ANALYSIS</h3>
+      <div class="url-details" id="url-details"></div>
+    </div>
+
+    <div class="recommendations-panel glass-panel" id="recommendations-panel">
+      <h3><i class="fa-solid fa-shield-check"></i> RECOMMENDATIONS</h3>
+      <ul class="rec-list" id="rec-list"></ul>
+    </div>
+
+    <div class="action-bar">
+      <button class="cyber-btn" id="share-btn">PROCEED TO SHARE <i class="fa-solid fa-arrow-right"></i></button>
+      <button class="cyber-btn secondary-btn" id="new-scan-btn">NEW SCAN <i class="fa-solid fa-rotate"></i></button>
+      <button class="cyber-btn secondary-btn" id="export-btn">EXPORT REPORT <i class="fa-solid fa-download"></i></button>
+    </div>
+  </section>
+
+  <section id="history-section" class="history-section glass-panel hidden">
+    <h2><i class="fa-solid fa-clock-rotate-left"></i> SCAN HISTORY</h2>
+    <div class="history-list" id="history-list"></div>
+  </section>
+
+  <footer>
+    <p>&copy; 2026 AI SAFE SHARE ASSISTANT | SYSTEM_ONLINE</p>
+  </footer>
+</div>
+
+<div class="modal-overlay hidden" id="auth-modal">
+  <div class="modal glass-panel">
+    <button class="modal-close" id="modal-close"><i class="fa-solid fa-xmark"></i></button>
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-auth="login">LOGIN</button>
+      <button class="auth-tab" data-auth="register">REGISTER</button>
+    </div>
+    <div id="auth-login">
+      <input type="email" id="login-email" class="auth-input" placeholder="EMAIL">
+      <input type="password" id="login-password" class="auth-input" placeholder="PASSWORD">
+      <button class="cyber-btn full-width" id="login-btn">LOGIN <i class="fa-solid fa-right-to-bracket"></i></button>
+      <p class="auth-msg" id="login-msg"></p>
+    </div>
+    <div id="auth-register" class="hidden">
+      <input type="text" id="reg-name" class="auth-input" placeholder="FULL NAME">
+      <input type="email" id="reg-email" class="auth-input" placeholder="EMAIL">
+      <input type="password" id="reg-password" class="auth-input" placeholder="PASSWORD">
+      <input type="text" id="reg-org" class="auth-input" placeholder="ORGANIZATION (optional)">
+      <button class="cyber-btn full-width" id="register-btn">REGISTER <i class="fa-solid fa-user-plus"></i></button>
+      <p class="auth-msg" id="register-msg"></p>
+    </div>
+  </div>
+</div>
+
+<div class="chatbot-container glass-panel" id="chatbot">
+  <div class="chatbot-header" id="chatbot-toggle">
+    <div class="chatbot-title">
+      <i class="fa-solid fa-robot"></i>
+      <span>AURA.ai Assistant</span>
+    </div>
+    <i class="fa-solid fa-chevron-up" id="chatbot-icon"></i>
+  </div>
+  <div class="chatbot-body" id="chatbot-body">
+    <div class="chat-messages" id="chat-messages">
+      <div class="message bot">Greetings. I am AURA. I monitor your data sharing for security risks. How can I assist you today?</div>
+    </div>
+    <div class="chat-input-area">
+      <input type="text" id="chat-input" placeholder="Query system...">
+      <button id="send-msg-btn"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

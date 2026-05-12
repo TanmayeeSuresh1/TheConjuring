@@ -1,0 +1,73 @@
+# SafeShare AI - Python Backend Requirements
+
+# Core Framework
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+pydantic==2.7.1
+pydantic-settings==2.2.1
+python-multipart==0.0.9
+
+# Async & Task Queue
+celery==5.4.0
+redis==5.0.4
+kombu==5.3.5
+
+# Database
+sqlalchemy==2.0.30
+alembic==1.13.1
+asyncpg==0.29.0
+psycopg2-binary==2.9.9
+
+# Authentication & Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+cryptography==42.0.7
+
+# AI/ML Core
+torch==2.3.0
+transformers==4.41.1
+scikit-learn==1.4.2
+numpy==1.26.4
+scipy==1.13.0
+onnxruntime==1.18.0
+
+# NLP
+spacy==3.7.4
+presidio-analyzer==2.2.354
+presidio-anonymizer==2.2.354
+
+# OCR Pipeline
+easyocr==1.7.1
+pytesseract==0.3.10
+opencv-python-headless==4.9.0.80
+Pillow==10.3.0
+pdf2image==1.17.0
+PyMuPDF==1.24.3
+
+# URL Analysis
+requests==2.31.0
+dnspython==2.6.1
+tldextract==5.1.2
+whois==0.9.27
+urllib3==2.2.1
+
+# Data Processing
+pandas==2.2.2
+joblib==1.4.2
+
+# Caching & Serialization
+hiredis==2.3.2
+msgpack==1.0.8
+
+# Logging & Observability
+structlog==24.1.0
+prometheus-client==0.20.0
+
+# HTTP Client
+httpx==0.27.0
+aiohttp==3.9.5
+
+# Utilities
+python-dotenv==1.0.1
+tenacity==8.3.0
+orjson==3.10.3
