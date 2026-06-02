@@ -71,12 +71,6 @@ window.addEventListener('load', async () => {
   loadSecurityRules();
 });
 
-  startTyping();
-  startIconStream();
-  loadHistory();
-  loadSecurityRules();
-});
-
 // ── Typing animation ──────────────────────────────────────────────────────────
 function startTyping() {
   const lines = [
